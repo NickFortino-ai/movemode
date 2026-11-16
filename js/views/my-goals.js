@@ -197,7 +197,7 @@ MM.myGoalsView = (function () {
           (due
             ? '<span class="chip' + (due.overdue && !p.done ? '' : ' chip-accent') + '">' +
                 ui.esc(due.label) + ' · ' + ui.esc(due.dateLabel) + '</span>'
-            : '<span class="chip">No deadline</span>') +
+            : '<span class="chip">⏳ ' + ui.esc(MM.NO_DEADLINE_LABEL) + '</span>') +
         '</div>' +
 
         '<div class="goal-big-figure">' + ui.esc(p.summary) + '</div>' +

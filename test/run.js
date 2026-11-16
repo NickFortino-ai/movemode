@@ -83,6 +83,7 @@ async function boot(presetStorage) {
   return dom;
 }
 
+const ui_text = (el) => (el ? el.textContent : '');
 const pad = (n) => (n < 10 ? '0' + n : '' + n);
 const keyOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return keyOf(d); }
@@ -511,8 +512,16 @@ function signedIn(dataJson, profile) {
     check('timeframe choices offered',
           W.document.querySelectorAll('#goal-timeframe option').length,
           W.MM.GOAL_TIMEFRAMES.length);
-    ok('"no deadline" is an option — goals do not have to have one',
-       W.MM.GOAL_TIMEFRAMES.some((f) => f.days === null));
+    // "However long it takes" has to be a real, inviting option — and the
+    // default — not a blank you forgot to fill in.
+    const openEnded = W.MM.GOAL_TIMEFRAMES.find((f) => f.days === null);
+    ok('an open-ended option exists', !!openEnded);
+    check('worded as a real answer', openEnded.label, 'However long it takes');
+    check('and it is the first choice', W.MM.GOAL_TIMEFRAMES[0].id, openEnded.id);
+    check('so it is what the form defaults to', q('#goal-timeframe').value, openEnded.id);
+    ok('the hint tells you that is allowed',
+       /however long it takes/i.test(q('#goal-form .field-hint').textContent) ||
+       /real answer/i.test(ui_text(q('#goal-form'))));
     ok('the custom date box is hidden until asked for',
        q('#goal-custom-date-field').style.display === 'none');
 
@@ -585,6 +594,65 @@ function signedIn(dataJson, profile) {
     await sleep(60);
     check('editing it there saves too',
           T.find(bench.id).deadline, W.MM.dates.addDays(TODAY, 14));
+    d.window.close();
+  }
+
+  // =========================================================================
+  group('a goal with no clock on it: "100 push-ups, however long it takes"');
+  {
+    const d = await boot(signedIn(craft({})));
+    const W = d.window;
+    const q = (s) => W.document.querySelector(s);
+    const T = W.MM.goalTracker;
+
+    q('#btn-add-goal').click();
+    q('#goal-name').value = 'Do 100 push-ups';
+    q('#goal-metric').value = 'manual';
+    q('#goal-metric').dispatchEvent(new W.Event('change', { bubbles: true }));
+    q('#goal-start').value = '0';
+    q('#goal-unit').value = 'push-ups';
+    q('#goal-target').value = '100';
+    // Leaving the timeframe on its default — no date picked at all.
+    q('#goal-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+
+    const pushups = W.MM.store.get().trackedGoals.find((g) => g.name === 'Do 100 push-ups');
+    ok('the goal was created', !!pushups);
+    check('with no deadline at all', pushups.deadline, null);
+    check('and it still tracks properly', T.progress(pushups).summary, '0 / 100 push-ups');
+
+    // It must read as a choice, not an omission, everywhere it appears.
+    check('the label is a real phrase', T.deadlineLabel(pushups), 'However long it takes');
+    ok('the card says so rather than showing nothing',
+       /however long it takes/i.test(q('#home-goals .goal-due').textContent));
+
+    W.MM.myGoalsView.openGoal(pushups.id);
+    W.MM.app.showView('goals');
+    await sleep(60);
+    ok('the goal page says so too',
+       /however long it takes/i.test(q('#goals-content').textContent));
+    ok('and no overdue warning is possible', !q('.goal-due.is-over'));
+
+    // Progress still works exactly as it would with a deadline.
+    T.recordProgress(pushups.id, { current: 40 });
+    await sleep(60);
+    check('progress still counts', T.progress(T.find(pushups.id)).percent, 40);
+
+    // You can add a deadline later if you change your mind...
+    q('[data-update-goal]').click();
+    q('#progress-deadline').value = W.MM.dates.addDays(TODAY, 30);
+    q('#progress-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+    ok('a deadline can be added later', !!T.find(pushups.id).deadline);
+
+    // ...and take it off again with one tap.
+    q('[data-update-goal]').click();
+    ok('there is a one-tap way back to open-ended', !!q('#progress-no-deadline'));
+    q('#progress-no-deadline').click();
+    check('tapping it clears the date box', q('#progress-deadline').value, '');
+    q('#progress-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+    check('and saving keeps it open-ended', T.find(pushups.id).deadline, null);
     d.window.close();
   }
 

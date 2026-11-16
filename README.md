@@ -420,6 +420,19 @@ one of these for you, using the `tracker` defined on that category in
 | `minutes` | Minutes logged | Every Monday |
 | `streak` | Your current streak | Never |
 
+### Deadlines are optional on purpose
+
+When you create a goal you choose how long to give yourself, and the **first
+option — and the default — is "However long it takes."** That's deliberate.
+Wanting to do 100 push-ups *eventually* is a perfectly good goal, and forcing
+someone to commit to a date can put them off starting at all.
+
+It's worded as a real answer rather than "no deadline" for the same reason:
+it should read as a choice, not as a field you forgot to fill in. The goal
+card and the goal's page both say "however long it takes" rather than showing
+a blank. A deadline can be added later, and removed again in one tap, from
+the update form or from Settings.
+
 **Manual goals** are ones only the user knows the number for — a bench press
 max, a mile time, a body weight. They tap **Update** on the home screen and
 type the new number. These work in both directions: if the target is *lower*

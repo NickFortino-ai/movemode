@@ -146,8 +146,12 @@
   color: #fff;
 }
 
-/* A full-width, extra-chunky button — used for the main "I moved today" CTA */
+/* A full-width, extra-chunky button — used for the main "I moved today" CTA.
+   display:flex (rather than the inline-flex .btn normally uses) makes it a
+   proper block-level element, so two of them stacked never sit on the same
+   line as each other. */
 .btn-block {
+  display: flex;
   width: 100%;
 }
 
@@ -851,6 +855,21 @@
    movement goal is not a crisis. */
 .goal-due.is-soon { color: var(--accent-2); }
 .goal-due.is-over { color: #d2543d; }
+
+/* "however long it takes" — deliberately the quietest of the three, since
+   the whole point of it is that there is nothing to worry about. */
+.goal-due.is-open {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.72rem;
+}
+
+/* Lets the countdown drop to its own line on a narrow phone instead of
+   squeezing the percentage and the button. */
+.goal-foot {
+  flex-wrap: wrap;
+}
 
 /* ---- A goal in the list, which is a link to its own page ---- */
 .goal-open {

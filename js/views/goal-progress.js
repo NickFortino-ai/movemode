@@ -79,10 +79,15 @@ MM.goalProgress = (function () {
       '</div>';
   }
 
-  /* ---- The countdown, when a goal has a date on it ----------------------- */
+  /* ---- The countdown, or "however long it takes" ------------------------- */
   function deadlineHTML(p) {
     var due = MM.goalTracker.deadlineInfo(p.goal);
-    if (!due) return '';
+
+    // No deadline is a choice, not a blank. Say so, quietly.
+    if (!due) {
+      return '<span class="goal-due is-open">' +
+        ui.esc(MM.NO_DEADLINE_LABEL.toLowerCase()) + '</span>';
+    }
 
     // Once a goal is reached the countdown stops mattering.
     var classes = ['goal-due'];
@@ -154,8 +159,10 @@ MM.goalProgress = (function () {
                 ui.esc(frame.label) + '</option>';
             }).join('') +
           '</select>' +
-          '<p class="field-hint">You can change this later — most people do not ' +
-            'get the timing right first go.</p>' +
+          '<p class="field-hint">Not every goal needs a date. ' +
+            '"However long it takes" is a real answer — wanting to do 100 ' +
+            'push-ups eventually is a perfectly good goal. You can change ' +
+            'this later either way.</p>' +
         '</div>' +
 
         '<div class="field" id="goal-custom-date-field" style="display:none">' +
@@ -259,11 +266,14 @@ MM.goalProgress = (function () {
           '<label for="progress-deadline">By when? (optional)</label>' +
           '<input type="date" id="progress-deadline" ' +
             'value="' + ui.esc(goal.deadline || '') + '">' +
+          '<button type="button" class="btn btn-ghost mt-1" id="progress-no-deadline">' +
+            ui.esc(MM.NO_DEADLINE_LABEL) +
+          '</button>' +
           '<p class="field-hint">' +
             (goal.deadline
-              ? 'Currently ' + ui.esc(MM.goalTracker.deadlineInfo(goal).label) +
-                '. Clear the box to drop the deadline.'
-              : 'No deadline set. Give yourself one if it helps.') +
+              ? 'Currently ' + ui.esc(MM.goalTracker.deadlineInfo(goal).label) + '.'
+              : 'No clock on this one.') +
+            ' Taking the pressure off is always allowed.' +
           '</p>' +
         '</div>' +
 
@@ -272,6 +282,12 @@ MM.goalProgress = (function () {
       '</form>';
 
     ui.openModal('entry-modal');
+
+    // One tap to take the deadline off again.
+    ui.$('#progress-no-deadline').addEventListener('click', function () {
+      ui.$('#progress-deadline').value = '';
+      ui.toast('No clock on this one.');
+    });
 
     ui.$('#progress-form').addEventListener('submit', function (event) {
       event.preventDefault();
@@ -348,9 +364,11 @@ MM.goalProgress = (function () {
       '</div>' +
       '<div class="card">' +
         (rows || '<p class="small muted">No goals yet.</p>') +
-        '<p class="small faint mt-1">Edit a target by typing a new number. ' +
-          'Goals from your categories update automatically from your log; ' +
-          'your own goals are updated from the Home screen.</p>' +
+        '<p class="small faint mt-1">Edit a target by typing a new number, and ' +
+          'a deadline by picking a date — leave the date empty and the goal ' +
+          'takes however long it takes. Goals from your categories update ' +
+          'automatically from your log; your own goals are updated from the ' +
+          'Home screen.</p>' +
         '<button type="button" class="btn btn-outline btn-block mt-1" id="settings-add-goal">' +
           '+ Add a goal' +
         '</button>' +

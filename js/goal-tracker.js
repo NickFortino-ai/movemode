@@ -37,9 +37,15 @@
 
    Offered when a goal is created. Each one is turned into an actual date so
    the countdown keeps working as time passes.
+
+   "However long it takes" is deliberately FIRST and the default. Plenty of
+   goals are better without a clock on them — wanting to do 100 push-ups
+   eventually is a perfectly good goal, and being made to pick a date can put
+   people off starting at all. It is written as a real answer rather than
+   "no deadline", because it is a choice, not a thing you forgot to fill in.
    -------------------------------------------------------------------------- */
 MM.GOAL_TIMEFRAMES = [
-  { id: 'none', label: 'No deadline', days: null },
+  { id: 'none', label: 'However long it takes', days: null },
   { id: '1w', label: '1 week', days: 7 },
   { id: '2w', label: '2 weeks', days: 14 },
   { id: '1m', label: '1 month', days: 30 },
@@ -215,6 +221,16 @@ MM.goalTracker = (function () {
       soon: daysLeft >= 0 && daysLeft <= 7,
       label: label,
     };
+  }
+
+  /* What to call this goal's timing on screen. A goal with no deadline is
+     not blank — it is "however long it takes", and saying so out loud keeps
+     it feeling like a decision rather than an omission. */
+  MM.NO_DEADLINE_LABEL = 'However long it takes';
+
+  function deadlineLabel(goal) {
+    var due = deadlineInfo(goal);
+    return due ? due.label : MM.NO_DEADLINE_LABEL;
   }
 
   // Turn a timeframe choice from MM.GOAL_TIMEFRAMES into a real date.
@@ -440,6 +456,7 @@ MM.goalTracker = (function () {
     thisWeek: thisWeek,
     progress: progress,
     deadlineInfo: deadlineInfo,
+    deadlineLabel: deadlineLabel,
     dateFromTimeframe: dateFromTimeframe,
     setDeadline: setDeadline,
     all: all,
