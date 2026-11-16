@@ -1,0 +1,420 @@
+/* ============================================================================
+   desktop.css — THE BIG-SCREEN LAYOUT
+   ============================================================================
+   The other stylesheets are mobile-first: their base styles ARE the phone
+   layout. This file loads last and widens everything out for tablets and
+   computers. Nothing in here affects phones.
+
+   The two things that change the most:
+
+     1. The bottom tab bar becomes a LEFT SIDEBAR at 1024px and up.
+        (Bottom tab bars are a phone idiom — on a computer the navigation
+        belongs down the side where there's room for labels.)
+
+     2. Screens go from one tall column to two or three columns, so you can
+        see your streak and your heatmap at the same time instead of
+        scrolling between them.
+
+   Breakpoints used here:
+     640px   tablets / small laptops — wider column, 2-up option cards
+     1024px  desktop — nav as a tall column on the left, multi-column screens
+     1400px  big monitors — a little more room, capped so text stays readable
+   ========================================================================== */
+
+
+/* ===========================================================================
+   640px — TABLETS AND SMALL LAPTOPS
+   Still one column, just a wider and roomier one.
+   =========================================================================== */
+@media (min-width: 640px) {
+
+  .app-main {
+    max-width: 760px;
+  }
+
+  /* Big choice cards sit two across once there's room. */
+  .option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* 15 columns x 2 rows reads better than 10 x 3 on a wider screen. */
+  .heatmap {
+    grid-template-columns: repeat(15, 1fr);
+  }
+
+  .onboarding-inner {
+    max-width: 680px;
+    padding-top: 48px;
+  }
+
+  /* Modals become centered dialogs instead of phone-style bottom sheets. */
+  .modal {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .modal-panel {
+    border-radius: var(--radius-lg);
+    border-bottom: var(--border-width) solid var(--border);
+    padding-bottom: 22px;
+  }
+}
+
+
+/* ===========================================================================
+   1024px — DESKTOP
+   =========================================================================== */
+@media (min-width: 1024px) {
+
+  /* ---- Shared desktop measurements ------------------------------------- */
+  :root {
+    --header-h: 70px;
+    --sidebar-w: 268px;   /* widen this and the nav text has more room */
+    --page-pad: 40px;
+    --gap: 24px;
+  }
+
+  /* ---- The shell: a header across the top, then nav beside content ------
+     Column 1  the navigation, as a tall column down the left
+     Column 2  the content (the day streak sits at the top of it)
+
+     The areas are placed explicitly because the navigation comes AFTER the
+     content in index.html — that order is deliberate, since on a phone the
+     nav is a bottom tab bar and it should come last for screen readers.
+
+     Laying the shell out with grid rather than position:fixed matters: a
+     fixed element is normally placed against the window, but any ancestor
+     with a transform, filter, or `contain` makes it position against that
+     ancestor instead, which sends it somewhere unexpected. Grid tracks
+     can't come apart like that, and minmax(0, 1fr) stops a wide child from
+     pushing the content past the right-hand edge. */
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  /* ---- Header: full width across the top ------------------------------- */
+  .app-header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: var(--header-h);
+    padding: 0 var(--page-pad);
+  }
+
+  .logo-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .logo-mark svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .logo-text {
+    font-size: 1.5rem;
+  }
+
+  .mode-opt {
+    min-width: 76px;
+    min-height: 36px;
+    font-size: 0.86rem;
+  }
+
+  /* ---- Navigation: a tall column beside the content ---------------------
+     This is still the same .main-nav element from index.html — only its
+     styling changes. On a phone it's a bottom tab bar with the icon stacked
+     above the label; here the five tabs run down the left-hand side, each
+     one big, with the icon beside the label. */
+  .main-nav {
+    grid-column: 1;
+    grid-row: 2;
+    /* `inset: auto` clears the top/right/bottom/left from the phone layout
+       before we set our own. Sticky (not fixed) keeps the column in the
+       normal flow, so it always lines up with its grid track and stays put
+       as the content scrolls past it. */
+    position: sticky;
+    inset: auto;
+    top: var(--header-h);
+    align-self: start;
+    width: auto;
+    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    /* Undo the floating pill from the 640px block in layout.css */
+    transform: none;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 22px 16px;
+    border: none;
+    border-right: var(--border-width) solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Big, full-width rows — much larger than the phone tab bar. */
+  .nav-btn {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    width: 100%;
+    min-height: 60px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 1.05rem;
+  }
+
+  .nav-btn svg {
+    width: 25px;
+    height: 25px;
+    stroke-width: 1.8;
+  }
+
+  .nav-label {
+    max-width: none;
+  }
+
+  /* A left accent edge marks the active tab. */
+  .nav-btn.is-active {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  /* ---- Content area ---------------------------------------------------- */
+  .app-main {
+    grid-column: 2;
+    grid-row: 2;
+    /* The nav is a grid column, so no margin is needed to clear it. */
+    margin: 0;
+    max-width: none;
+    /* Without this a wide child could stretch the page past the window. */
+    min-width: 0;
+    padding: 32px var(--page-pad) 64px;
+  }
+
+  /* Cap the line length inside the wide area so text stays readable, and
+     centre it on the page. */
+  .view {
+    max-width: 1180px;
+    margin: 0 auto;
+    min-width: 0;
+  }
+
+  h1 { font-size: 2.4rem; }
+
+  .view-header {
+    margin-bottom: 24px;
+  }
+
+  .view-intro {
+    font-size: 1rem;
+    max-width: 70ch;
+  }
+
+  /* No bottom tab bar to clear on a desktop, so the toast sits lower, and
+     it's centred over the content rather than the whole window. */
+  .toast {
+    bottom: 28px;
+    left: calc(50% + (var(--sidebar-w) / 2));
+  }
+
+  /* =========================================================================
+     HOME — streak on the left, goals + heatmap on the right
+     ======================================================================= */
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  /* Grid and flex children default to min-width:auto, which lets an item
+     with wide content (a long button, a nowrap chip) burst out of its
+     column and drag a horizontal scrollbar onto the whole page. Setting
+     min-width: 0 lets them shrink instead. This is the single most common
+     cause of unexpected sideways scrolling in a CSS grid layout. */
+  .home-grid > *,
+  .day-grid > *,
+  .nutrition-grid > *,
+  .quick-grid > *,
+  #log-content > * {
+    min-width: 0;
+  }
+
+  /* The first thing in each column shouldn't carry a top margin, since the
+     column itself already provides the spacing. */
+  .home-col > *:first-child,
+  .home-col > *:first-child > .card,
+  .home-col > .section-title:first-child {
+    margin-top: 0;
+  }
+
+  /* A bigger ring, now that it has a column to itself. */
+  .streak-ring {
+    width: 228px;
+    height: 228px;
+    padding: 11px;
+  }
+
+  .streak-number {
+    font-size: 6rem;
+  }
+
+  .streak-hero {
+    padding: 32px 22px 26px;
+  }
+
+  .hype-line {
+    font-size: 1.1rem;
+    padding: 15px 18px;
+  }
+
+  /* Side by side instead of stacked, since there's room. */
+  .home-col .btn-row.mt-2,
+  .home-col .btn-row.mt-1 {
+    margin-top: 14px;
+  }
+
+  .heatmap {
+    gap: 7px;
+  }
+
+  /* =========================================================================
+     MY PLAN — the week in two columns, nutrition in two columns
+     ======================================================================= */
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  /* Inside a grid the cards are positioned by the gap, so drop the
+     stacking margin they use on a phone. */
+  .day-grid .day-card {
+    margin-bottom: 0;
+  }
+
+  .nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  .nutrition-grid > .card,
+  .nutrition-grid > .card + .card {
+    margin-top: 0;
+  }
+
+  /* The summary and the disclaimer read better full width. */
+  .nutrition-grid > .span-all {
+    grid-column: 1 / -1;
+  }
+
+  /* =========================================================================
+     QUICK WORKOUT — controls pinned on the left, workout on the right
+     ======================================================================= */
+  .quick-grid {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  /* The pickers stay in view while you scroll a long exercise list,
+     clearing the sticky header above them. */
+  .quick-grid > .quick-controls {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+
+  /* The muscle buttons get a column back now that the panel is narrower. */
+  .quick-grid {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
+
+  /* Two hub cards side by side under the streak. */
+  .hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #quick-result > *:first-child {
+    margin-top: 0;
+  }
+
+  /* Before a muscle group is picked the right side is empty — fill it with
+     a hint instead of leaving a blank gap. */
+  #quick-result:empty::before {
+    content: 'Pick a muscle group to see what you can do for it.';
+    display: grid;
+    place-items: center;
+    min-height: 260px;
+    padding: 30px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  .timer-clock {
+    font-size: 4.4rem;
+  }
+
+  /* =========================================================================
+     LOG — two columns of day groups
+     ======================================================================= */
+  #log-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--gap);
+    align-items: start;
+  }
+
+  #log-content .empty-state {
+    grid-column: 1 / -1;
+  }
+
+  /* The tabs and Add button don't need the full width. */
+  #log-tabs,
+  #view-log > .btn-row {
+    max-width: 420px;
+  }
+
+  /* =========================================================================
+     SETTINGS — capped width; a full-width column of settings looks broken
+     ======================================================================= */
+  #settings-content {
+    max-width: 840px;
+  }
+}
+
+
+/* ===========================================================================
+   1400px — BIG MONITORS
+   A touch more room. Deliberately capped: endless line lengths are harder
+   to read, not easier.
+   =========================================================================== */
+@media (min-width: 1400px) {
+
+  /* Changing the one variable keeps the header, the nav bar, and the content
+     lined up on the same left and right edges. */
+  :root {
+    --page-pad: 56px;
+  }
+
+  .view {
+    max-width: 1280px;
+  }
+
+  .app-main {
+    padding: 40px var(--page-pad) 72px;
+  }
+
+  /* Nutrition gets a third column at this width. */
+  .nutrition-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

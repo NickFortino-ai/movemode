@@ -1,0 +1,9 @@
+# macOS folder metadata
+.DS_Store
+
+# Editor settings
+.vscode/
+.idea/
+
+# Nothing here needs npm, but just in case you add tooling later
+node_modules/

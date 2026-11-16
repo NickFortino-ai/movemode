@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="chill">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- The page title and theme color are set from js/config.js once the app
+     starts, so renaming the site in that one file renames this too. -->
+<title>MoveMode</title>
+<meta name="description" content="Movement is one of the best things you can do for your body and your mind. Build a streak, set goals, and just keep moving — whatever level you're at.">
+<meta name="theme-color" content="#eef3ef">
+<meta name="color-scheme" content="light dark">
+
+<!-- Fonts. If you're offline these fail silently and the fallback system
+     fonts in css/theme.css take over, so the site still looks fine. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<!-- Loads last: widens the phone layout out for tablets and computers. -->
+<link rel="stylesheet" href="css/desktop.css">
+</head>
+<body>
+
+<!-- ==========================================================================
+     ICON SPRITE
+     Defined once here and reused with <svg><use href="#icon-name"></use></svg>.
+     Keeps the markup short and means icons recolor with the theme.
+     ======================================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <!-- Filled: used for the logo badge -->
+  <symbol id="icon-logo" viewBox="0 0 24 24">
+    <path d="M4 5.5 11 12l-7 6.5V5.5zm8.5 0L19.5 12l-7 6.5V5.5z"/>
+  </symbol>
+
+  <!-- Stroked: used for the tab bar -->
+  <symbol id="icon-flame" viewBox="0 0 24 24">
+    <path d="M12 2.8c3.4 3.9 5.4 6.4 5.4 9.3a5.4 5.4 0 0 1-10.8 0c0-2.9 2-5.4 5.4-9.3z"/>
+    <path d="M12 17.4a2.3 2.3 0 0 0 2.3-2.3c0-1.2-1.1-2.3-2.3-3.8-1.2 1.5-2.3 2.6-2.3 3.8a2.3 2.3 0 0 0 2.3 2.3z"/>
+  </symbol>
+  <symbol id="icon-calendar" viewBox="0 0 24 24">
+    <rect x="3.2" y="5" width="17.6" height="16" rx="2.4"/>
+    <path d="M3.2 10h17.6M8 3v4M16 3v4M8 14h2M14 14h2M8 17.6h2M14 17.6h2"/>
+  </symbol>
+  <symbol id="icon-bolt" viewBox="0 0 24 24">
+    <path d="M13.2 2.4 4.8 13.6h6.1l-1 8 8.4-11.2h-6.1l1-8z"/>
+  </symbol>
+  <symbol id="icon-list" viewBox="0 0 24 24">
+    <path d="M4 6.5h.01M4 12h.01M4 17.5h.01M8.6 6.5H20M8.6 12H20M8.6 17.5H20"/>
+  </symbol>
+  <symbol id="icon-sliders" viewBox="0 0 24 24">
+    <path d="M4 7h16M4 12h16M4 17h16"/>
+    <circle cx="9" cy="7" r="2.2"/>
+    <circle cx="15" cy="12" r="2.2"/>
+    <circle cx="8" cy="17" r="2.2"/>
+  </symbol>
+  <symbol id="icon-chevron" viewBox="0 0 24 24">
+    <path d="m6 9.5 6 6 6-6"/>
+  </symbol>
+</svg>
+
+
+<!-- ==========================================================================
+     APP SHELL
+     ======================================================================= -->
+<div class="app">
+
+  <!-- ---- HEADER: logo + the always-visible mode toggle ------------------ -->
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><use href="#icon-logo"></use></svg>
+      </span>
+      <!-- Filled in from MM.SITE.name -->
+      <span class="logo-text" id="site-name">MoveMode</span>
+    </div>
+
+    <div class="header-right">
+      <div class="mode-toggle" role="group" aria-label="Choose your mode">
+        <span class="mode-thumb" aria-hidden="true"></span>
+        <button type="button" class="mode-opt" data-mode="chill" aria-pressed="true">Chill</button>
+        <button type="button" class="mode-opt" data-mode="grind" aria-pressed="false">Grind</button>
+      </div>
+
+      <!-- Who's signed in. Tapping it opens the Profile page. -->
+      <button type="button" class="avatar-btn" id="header-avatar"
+              aria-label="Your profile">
+        <span id="header-avatar-emoji" aria-hidden="true">💪</span>
+      </button>
+    </div>
+  </header>
+
+
+  <!-- ---- MAIN: one <section class="view"> per screen -------------------- -->
+  <main class="app-main">
+
+    <!-- ================= HOME =================
+         Deliberately the quietest screen in the app. When you land here you
+         should see two things and nothing else: how you're doing, and what
+         you're working toward. Detail (the 30-day grid, totals, history)
+         lives on the Log screen; plans live on My Goals. -->
+    <section class="view is-active" id="view-home" aria-labelledby="home-heading">
+      <h1 class="sr-only" id="home-heading">Your movement</h1>
+
+      <!-- Shows up only after a missed day resets the streak -->
+      <div id="restart-banner"></div>
+
+      <!-- Two columns side by side on a desktop, stacked on a phone.
+           See css/desktop.css. -->
+      <div class="home-grid">
+
+        <!-- Left column: how you're doing, and the one button that matters -->
+        <div class="home-col">
+          <div class="streak-hero">
+            <div class="streak-ring" id="streak-ring" style="--progress: 0">
+              <div class="streak-ring-inner">
+                <div>
+                  <div class="streak-number" id="streak-number">0</div>
+                  <div class="streak-label" id="streak-label">day streak</div>
+                </div>
+              </div>
+            </div>
+            <p class="streak-message" id="streak-message"></p>
+          </div>
+
+          <!-- The two main actions -->
+          <div class="btn-row mt-2">
+            <button type="button" class="btn btn-primary btn-big" id="btn-moved">I moved today</button>
+          </div>
+          <div class="btn-row mt-1">
+            <button type="button" class="btn btn-outline" id="btn-rest">Taking a rest day</button>
+          </div>
+          <p class="small faint center mt-1" id="rest-hint"></p>
+
+          <!-- Why any of this is worth doing. The point of the whole site. -->
+          <p class="hype-line" id="hype-line"></p>
+          <div id="home-why"></div>
+        </div>
+
+        <!-- Right column: what you're working toward -->
+        <div class="home-col">
+          <!-- Goal progress bars -->
+          <div class="section-title">
+            <h2 id="goals-title">Your goals</h2>
+            <button type="button" class="btn btn-ghost" id="btn-add-goal">+ Add goal</button>
+          </div>
+          <div id="home-goals"></div>
+
+          <!-- Today's session, if the plan has one -->
+          <div id="home-today"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= MY GOALS =================
+         Everything to do with the user's goals in one place: their goal
+         progress bars, the weekly exercise plan built from those goals, and
+         the diet guidance that matches them. -->
+    <section class="view" id="view-goals" aria-labelledby="goals-heading">
+      <div class="view-header">
+        <h1 id="goals-heading">My Goals</h1>
+        <p class="view-intro" id="goals-intro"></p>
+      </div>
+
+      <!-- Either the goals, plan and diet, or a prompt to set them up -->
+      <div id="goals-content"></div>
+    </section>
+
+
+    <!-- ================= QUICK WORKOUT ================= -->
+    <section class="view" id="view-quick" aria-labelledby="quick-heading">
+      <div class="view-header">
+        <h1 id="quick-heading">What should I do right now?</h1>
+        <p class="view-intro" id="quick-intro"></p>
+      </div>
+
+      <!-- Pickers beside the exercise list on a desktop, stacked on a phone. -->
+      <div class="quick-grid">
+        <div class="card quick-controls">
+          <div class="control-group">
+            <span class="control-label">What do you have?</span>
+            <div class="segmented" id="quick-equipment" role="group" aria-label="Equipment">
+              <button type="button" class="seg-btn" data-value="none" aria-pressed="true">Nothing</button>
+              <button type="button" class="seg-btn" data-value="dumbbells">Dumbbells</button>
+              <button type="button" class="seg-btn" data-value="gym">Full gym</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <span class="control-label" id="muscle-label">What do you want to work?</span>
+            <!-- Built from MM.MUSCLE_GROUPS in js/data/exercises.js -->
+            <div class="muscle-grid" id="muscle-groups" role="group" aria-labelledby="muscle-label"></div>
+          </div>
+        </div>
+
+        <!-- The exercise list for the chosen muscle group lands here -->
+        <div id="quick-result"></div>
+      </div>
+    </section>
+
+
+    <!-- ================= LOG ================= -->
+    <section class="view" id="view-log" aria-labelledby="log-heading">
+      <div class="view-header">
+        <h1 id="log-heading">Your log</h1>
+        <p class="view-intro" id="log-intro"></p>
+      </div>
+
+      <!-- The 30-day grid and the totals live here rather than on Home, so
+           Home can stay quiet. This is the screen you come to for detail. -->
+      <div class="stat-row" id="log-stats"></div>
+
+      <div class="section-title">
+        <h2 id="heatmap-title">Your last 30 days</h2>
+      </div>
+      <div class="card mb-1">
+        <div class="heatmap" id="heatmap"></div>
+        <div class="heat-legend">
+          <span>Less</span>
+          <span class="swatches">
+            <span class="swatch" style="background: var(--heat-0)"></span>
+            <span class="swatch" style="background: var(--heat-1)"></span>
+            <span class="swatch" style="background: var(--heat-2)"></span>
+            <span class="swatch" style="background: var(--heat-3)"></span>
+          </span>
+          <span>More</span>
+          <span style="margin-left:auto; display:flex; align-items:center; gap:5px;">
+            <span class="swatch" style="background: var(--heat-rest)"></span> Rest
+          </span>
+        </div>
+        <p class="small faint mt-1" id="heatmap-hint"></p>
+      </div>
+
+      <div class="tab-row" id="log-tabs" role="group" aria-label="Log type">
+        <button type="button" class="seg-btn" data-value="workouts" aria-pressed="true">Workouts</button>
+        <button type="button" class="seg-btn" data-value="meals">Meals</button>
+      </div>
+
+      <div class="btn-row mb-1">
+        <button type="button" class="btn btn-primary" id="btn-add-log">Add entry</button>
+      </div>
+
+      <div id="log-content"></div>
+    </section>
+
+
+    <!-- ================= PROFILE =================
+         Reached from the avatar in the header, or from Settings. Not a tab,
+         because five tabs is already plenty on a phone. -->
+    <section class="view" id="view-profile" aria-labelledby="profile-heading">
+      <div class="view-header">
+        <h1 id="profile-heading">Profile</h1>
+        <p class="view-intro" id="profile-intro"></p>
+      </div>
+      <div id="profile-content"></div>
+    </section>
+
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="view" id="view-settings" aria-labelledby="settings-heading">
+      <div class="view-header">
+        <h1 id="settings-heading">Settings</h1>
+        <p class="view-intro">Change your mode, redo your plan, or clear your data.</p>
+      </div>
+      <div id="settings-content"></div>
+    </section>
+
+  </main>
+
+
+  <!-- ---- BOTTOM TAB BAR ------------------------------------------------- -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button type="button" class="nav-btn is-active" data-view="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-flame"></use></svg>
+      <span class="nav-label">Home</span>
+    </button>
+    <button type="button" class="nav-btn" data-view="goals">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"></use></svg>
+      <span class="nav-label">My Goals</span>
+    </button>
+    <button type="button" class="nav-btn" data-view="quick">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bolt"></use></svg>
+      <span class="nav-label">Quick</span>
+    </button>
+    <button type="button" class="nav-btn" data-view="log">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-list"></use></svg>
+      <span class="nav-label">Log</span>
+    </button>
+    <button type="button" class="nav-btn" data-view="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-sliders"></use></svg>
+      <span class="nav-label">Settings</span>
+    </button>
+  </nav>
+</div>
+
+
+<!-- ==========================================================================
+     SIGN IN — a full-screen overlay shown before the app when nobody is
+     signed in. Profiles are stored in this browser only; see js/accounts.js.
+     ======================================================================= -->
+<div class="onboarding" id="signin" role="dialog" aria-modal="true" aria-labelledby="signin-title">
+  <div class="onboarding-inner">
+    <div class="signin-brand">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><use href="#icon-logo"></use></svg>
+      </span>
+      <span class="logo-text" id="signin-site-name">MoveMode</span>
+    </div>
+
+    <h1 id="signin-title">Who's moving today?</h1>
+    <p class="onboard-help" id="signin-help"></p>
+
+    <!-- The list of profiles on this device -->
+    <div id="signin-profiles"></div>
+
+    <!-- Shown when a profile with a PIN is tapped -->
+    <div id="signin-pin"></div>
+
+    <button type="button" class="btn btn-outline btn-block mt-2" id="signin-new">
+      + New profile
+    </button>
+
+    <div class="note mt-2">
+      <span class="note-icon" aria-hidden="true">🔒</span>
+      <span id="signin-disclaimer"></span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================================================
+     ONBOARDING — a full-screen overlay shown to first-time visitors and
+     whenever someone redoes their plan from Settings.
+     ======================================================================= -->
+<div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboard-title">
+  <div class="onboarding-inner">
+
+    <div class="steps" id="onboard-steps" aria-hidden="true"></div>
+
+    <h1 id="onboard-title" class="sr-only">Set up your plan</h1>
+
+    <!-- Step 1: goal -->
+    <div class="onboard-step is-active" data-step="0">
+      <h2 class="onboard-question" id="onboard-welcome">Welcome</h2>
+      <p class="onboard-help" id="onboard-intro"></p>
+      <h3>What are you going for?</h3>
+      <p class="onboard-help">Pick as many as you want — your first pick is
+        your main goal, and each one gets a progress bar on your home screen.</p>
+      <div class="option-grid" id="onboard-goals"></div>
+    </div>
+
+    <!-- Step 2: experience -->
+    <div class="onboard-step" data-step="1">
+      <h2 class="onboard-question">How much have you worked out before?</h2>
+      <p class="onboard-help">Be honest — this just sets the starting point. Everyone starts somewhere.</p>
+      <div class="option-grid" id="onboard-experience"></div>
+    </div>
+
+    <!-- Step 3: days per week -->
+    <div class="onboard-step" data-step="2">
+      <h2 class="onboard-question">How many days a week can you train?</h2>
+      <p class="onboard-help">Pick what you can actually keep up with, not what sounds impressive.</p>
+      <div class="segmented" id="onboard-days" role="group" aria-label="Days per week">
+        <button type="button" class="seg-btn" data-value="2">2</button>
+        <button type="button" class="seg-btn" data-value="3" aria-pressed="true">3</button>
+        <button type="button" class="seg-btn" data-value="4">4</button>
+        <button type="button" class="seg-btn" data-value="5">5</button>
+        <button type="button" class="seg-btn" data-value="6">6</button>
+      </div>
+      <p class="field-hint mt-1">Rest days get built in automatically.</p>
+    </div>
+
+    <!-- Step 4: equipment -->
+    <div class="onboard-step" data-step="3">
+      <h2 class="onboard-question">What equipment can you get to?</h2>
+      <p class="onboard-help">No equipment is completely fine — plenty of the library needs nothing at all.</p>
+      <div class="option-grid" id="onboard-equipment"></div>
+    </div>
+
+    <!-- Step 5: sport (optional) -->
+    <div class="onboard-step" data-step="4">
+      <h2 class="onboard-question">Do you play a sport?</h2>
+      <p class="onboard-help">Optional. It just helps us word things for you.</p>
+      <div class="field">
+        <label for="onboard-sport">Sport (optional)</label>
+        <input type="text" id="onboard-sport" placeholder="Football, track, swimming, none…" autocomplete="off">
+      </div>
+      <div class="note">
+        <span class="note-icon" aria-hidden="true">💬</span>
+        <span id="onboard-disclaimer"></span>
+      </div>
+    </div>
+
+    <div class="onboard-nav">
+      <button type="button" class="btn btn-outline" id="onboard-back">Back</button>
+      <button type="button" class="btn btn-primary" id="onboard-next">Next</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================================================
+     MODALS
+     ======================================================================= -->
+
+<!-- Log an activity or a meal -->
+<div class="modal" id="entry-modal" role="dialog" aria-modal="true" aria-labelledby="entry-modal-title">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h2 id="entry-modal-title">Log activity</h2>
+      <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+    </div>
+    <div id="entry-modal-body"></div>
+  </div>
+</div>
+
+<!-- Milestone celebration -->
+<div class="modal" id="celebrate-modal" role="dialog" aria-modal="true" aria-labelledby="celebrate-title">
+  <div class="modal-panel celebrate-panel">
+    <div class="celebrate-badge" id="celebrate-badge">7</div>
+    <h2 class="celebrate-title" id="celebrate-title">Nice work</h2>
+    <p class="celebrate-body" id="celebrate-body"></p>
+    <button type="button" class="btn btn-gradient btn-block" data-close-modal>Keep going</button>
+  </div>
+</div>
+
+<!-- Brief confirmation messages -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+
+<!-- ==========================================================================
+     SCRIPTS
+     Plain <script> tags in dependency order — no bundler, no ES modules.
+     (ES modules would need a web server; plain scripts let you just
+     double-click index.html.)
+     ======================================================================= -->
+
+<!-- 1. Config and data -->
+<script src="js/config.js"></script>
+<script src="js/data/exercises.js"></script>
+<script src="js/data/copy.js"></script>
+<script src="js/data/nutrition.js"></script>
+<script src="js/data/movement-facts.js"></script>
+<script src="js/data/plan-templates.js"></script>
+
+<!-- 2. Core logic -->
+<script src="js/dates.js"></script>
+<script src="js/accounts.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/streak.js"></script>
+<script src="js/goal-tracker.js"></script>
+<script src="js/plan-builder.js"></script>
+<script src="js/quick-workout.js"></script>
+<script src="js/timer.js"></script>
+
+<!-- 3. Shared UI helpers -->
+<script src="js/ui.js"></script>
+
+<!-- 4. One file per screen -->
+<script src="js/views/signin.js"></script>
+<script src="js/views/profile.js"></script>
+<script src="js/views/onboarding.js"></script>
+<script src="js/views/goal-progress.js"></script>
+<script src="js/views/home.js"></script>
+<script src="js/views/my-goals.js"></script>
+<script src="js/views/quick.js"></script>
+<script src="js/views/log.js"></script>
+<script src="js/views/settings.js"></script>
+
+<!-- 5. Starts everything up -->
+<script src="js/app.js"></script>
+</body>
+</html>

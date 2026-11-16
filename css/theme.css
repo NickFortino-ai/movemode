@@ -1,0 +1,214 @@
+/* ============================================================================
+   theme.css — COLORS, FONTS, AND THE TWO MODES
+   ============================================================================
+   Everything that differs between Chill mode and Grind mode is a CSS variable
+   defined here. The rest of the stylesheets only ever use the variables, which
+   is why switching modes recolors the entire site instantly.
+
+   The mode lives on the <html> element as data-mode="chill" or "grind".
+   js/app.js sets it. Nothing else needs to know how the colors work.
+
+   WANT A THIRD MODE?
+   Copy the [data-mode="grind"] block, rename it, add the mode to
+   js/data/copy.js and js/data/plan-templates.js (MM.MODE_TUNING), and add it
+   to the toggle in index.html.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   CHILL MODE (also the default for anything unset)
+   Light, soft, rounded. Greens and blues. Low pressure.
+   ------------------------------------------------------------------------- */
+:root,
+[data-mode='chill'] {
+  /* Surfaces */
+  --bg: #eef3ef;
+  --bg-accent-1: rgba(46, 158, 123, 0.16);   /* soft glow top-left */
+  --bg-accent-2: rgba(74, 144, 194, 0.14);   /* soft glow bottom-right */
+  --surface: #ffffff;
+  --surface-2: #f6faf7;
+  --surface-raised: #ffffff;
+  --border: #dde7e0;
+  --border-strong: #c6d6cb;
+
+  /* Text */
+  --text: #16241d;
+  --text-dim: #5c6f66;
+  --text-faint: #8ba096;
+
+  /* Brand */
+  --accent: #27906f;
+  --accent-hover: #1f7a5d;
+  --accent-soft: #e2f2eb;
+  --accent-text: #ffffff;
+  --accent-2: #4a90c2;
+  --accent-2-soft: #e6f0f8;
+  --gradient: linear-gradient(135deg, #2fa37d 0%, #4a90c2 100%);
+
+  /* Streak heatmap, lightest to strongest */
+  --heat-0: #e4ebe6;
+  --heat-1: #b9ddcb;
+  --heat-2: #6ec29b;
+  --heat-3: #27906f;
+  --heat-rest: #cfe1f0;
+
+  /* Shape */
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 26px;
+  --radius-pill: 999px;
+  --border-width: 1px;
+
+  /* Shadows — soft and diffuse in chill mode */
+  --shadow-sm: 0 1px 3px rgba(22, 36, 29, 0.06);
+  --shadow: 0 6px 20px rgba(22, 36, 29, 0.08);
+  --shadow-lg: 0 18px 44px rgba(22, 36, 29, 0.12);
+
+  /* Type */
+  --font-head: 'Nunito', 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-body: 'Nunito', 'Avenir Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --head-weight: 800;
+  --head-transform: none;
+  --head-spacing: -0.01em;
+  --head-line: 1.15;
+  --label-transform: none;
+  --label-spacing: 0.01em;
+
+  /* Decorative */
+  --texture: none;
+  --focus-ring: 0 0 0 3px rgba(39, 144, 111, 0.35);
+}
+
+/* ---------------------------------------------------------------------------
+   GRIND MODE
+   Dark, sharp, condensed caps. Electric orange. Locker room energy.
+   ------------------------------------------------------------------------- */
+[data-mode='grind'] {
+  /* Surfaces */
+  --bg: #0a0b0e;
+  --bg-accent-1: rgba(255, 74, 23, 0.20);
+  --bg-accent-2: rgba(255, 194, 71, 0.10);
+  --surface: #14161c;
+  --surface-2: #1b1e26;
+  --surface-raised: #1e222b;
+  --border: #2a2f3a;
+  --border-strong: #3c4350;
+
+  /* Text */
+  --text: #f6f7f9;
+  --text-dim: #a4abb8;
+  --text-faint: #6e7684;
+
+  /* Brand */
+  --accent: #ff4a17;
+  --accent-hover: #ff6336;
+  --accent-soft: rgba(255, 74, 23, 0.14);
+  --accent-text: #0a0b0e;
+  --accent-2: #ffc247;
+  --accent-2-soft: rgba(255, 194, 71, 0.14);
+  --gradient: linear-gradient(135deg, #ff4a17 0%, #ffc247 100%);
+
+  /* Streak heatmap */
+  --heat-0: #1c2029;
+  --heat-1: #7a2d14;
+  --heat-2: #cc3d12;
+  --heat-3: #ff6a2b;
+  --heat-rest: #3a4150;
+
+  /* Shape — much sharper corners than chill mode */
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 7px;
+  --radius-pill: 4px;
+  --border-width: 1px;
+
+  /* Shadows — tighter, with a hint of accent glow */
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.6);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.75);
+
+  /* Type — condensed, uppercase, aggressive */
+  --font-head: 'Barlow Condensed', 'Oswald', 'Arial Narrow', 'Haettenschweiler', Impact, sans-serif;
+  --font-body: 'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+  --head-weight: 800;
+  --head-transform: uppercase;
+  --head-spacing: 0.015em;
+  --head-line: 0.95;
+  --label-transform: uppercase;
+  --label-spacing: 0.09em;
+
+  /* A faint diagonal hazard texture over the page background */
+  --texture: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.016) 0px,
+    rgba(255, 255, 255, 0.016) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  --focus-ring: 0 0 0 3px rgba(255, 74, 23, 0.45);
+}
+
+/* ---------------------------------------------------------------------------
+   THE MODE TRANSITION
+   Any element that paints a themed color animates when the mode flips, which
+   is what makes switching feel like one smooth change instead of a hard cut.
+   ------------------------------------------------------------------------- */
+body,
+.app-header,
+.main-nav,
+.card,
+.btn,
+.chip,
+.stat,
+.heat-cell,
+.view,
+.modal-panel,
+.field input,
+.field select,
+.field textarea,
+.option-card,
+.exercise-row,
+.toast {
+  transition:
+    background-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-radius 420ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Headings get their own transition because the FONT changes too, and we
+   don't want letter-spacing to jump. */
+h1, h2, h3, .streak-number, .logo-text {
+  transition:
+    letter-spacing 420ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* A quick flash of the new accent color across the screen when the mode
+   changes, so the switch feels deliberate. Triggered by .mode-switching
+   being added to <body> for half a second in js/app.js. */
+body.mode-switching::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--gradient);
+  animation: mode-flash 520ms ease-out forwards;
+}
+
+@keyframes mode-flash {
+  0%   { opacity: 0.28; }
+  100% { opacity: 0; }
+}
+
+/* Respect people who ask their device to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

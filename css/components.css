@@ -1,0 +1,1915 @@
+/* ============================================================================
+   components.css — THE REUSABLE PIECES
+   ============================================================================
+   Buttons, cards, the mode toggle, the streak ring, the heatmap, forms,
+   the celebration popup, and the toast. Every color here comes from a
+   variable in theme.css, so these all restyle themselves when the mode
+   changes — there are no hard-coded colors in this file on purpose.
+   ========================================================================== */
+
+/* ===========================================================================
+   MODE TOGGLE (lives in the header, always visible)
+   =========================================================================== */
+.mode-toggle {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+
+/* The sliding highlight behind the active option. */
+.mode-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  border-radius: var(--radius-pill);
+  background: var(--gradient);
+  box-shadow: var(--shadow-sm);
+  transition: transform 340ms cubic-bezier(0.34, 1.3, 0.64, 1),
+              border-radius 420ms ease;
+}
+
+[data-mode='grind'] .mode-thumb {
+  transform: translateX(100%);
+}
+
+.mode-opt {
+  position: relative;
+  z-index: 1;
+  min-width: 62px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-head);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 240ms ease;
+}
+
+.mode-opt[aria-pressed='true'] {
+  color: var(--accent-text);
+}
+
+/* ===========================================================================
+   BUTTONS
+   All buttons are at least 46px tall so they're easy to hit on a phone.
+   =========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease, background-color 240ms ease,
+              color 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+}
+
+.btn:active {
+  transform: scale(0.975);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: var(--shadow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-gradient {
+  background: var(--gradient);
+  color: var(--accent-text);
+  box-shadow: var(--shadow);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  background: var(--surface-2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: #d2543d;
+  color: #d2543d;
+}
+
+.btn-danger:hover {
+  background: #d2543d;
+  color: #fff;
+}
+
+/* A full-width, extra-chunky button — used for the main "I moved today" CTA */
+.btn-block {
+  width: 100%;
+}
+
+.btn-big {
+  min-height: 62px;
+  font-size: 1.12rem;
+  padding: 14px 22px;
+}
+
+.btn-done {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-row > .btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ===========================================================================
+   CARDS
+   =========================================================================== */
+.card {
+  padding: 18px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.card + .card {
+  margin-top: 12px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.card-dim {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* A card with a colored left edge, used for "today" and for callouts. */
+.card-accent {
+  border-left: 4px solid var(--accent);
+}
+
+/* ===========================================================================
+   HOME: THE STREAK HERO
+   =========================================================================== */
+.streak-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 18px 22px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+/* Faint oversized glow behind the number */
+.streak-hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* The progress ring around the streak number.
+   --progress is a 0-100 number set inline by js/views/home.js. */
+.streak-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 196px;
+  height: 196px;
+  margin: 0 auto 6px;
+  padding: 9px;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      var(--accent) calc(var(--progress, 0) * 1%),
+      var(--heat-0) calc(var(--progress, 0) * 1%)
+    );
+  transition: background 600ms ease;
+}
+
+.streak-ring-inner {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.streak-number {
+  font-family: var(--font-head);
+  font-weight: var(--head-weight);
+  font-size: 5.1rem;
+  line-height: 0.9;
+  letter-spacing: var(--head-spacing);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Without background-clip: text the number above would be invisible, so
+   fall back to a solid accent color. */
+@supports not ((background-clip: text) or (-webkit-background-clip: text)) {
+  .streak-number {
+    background: none;
+    color: var(--accent);
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+.streak-label {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.streak-message {
+  margin: 10px auto 0;
+  max-width: 34ch;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.streak-next {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+}
+
+/* Random motivational line under the hero */
+.hype-line {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  text-align: center;
+}
+
+/* ===========================================================================
+   "WHY MOVEMENT MATTERS" CARD
+   The point of the whole site, so it gets a spot on the home screen.
+   Tapping it shows a different fact.
+   =========================================================================== */
+.why-card {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: var(--border-width) solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 200ms ease, transform 140ms ease;
+}
+
+.why-card:hover {
+  border-color: var(--border-strong);
+  border-left-color: var(--accent);
+}
+
+.why-card:active {
+  transform: scale(0.99);
+}
+
+.why-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.why-more {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.why-fact {
+  margin: 0 0 5px;
+  font-family: var(--font-head);
+  font-size: 1.08rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.3;
+}
+
+.why-because {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+/* ===========================================================================
+   STATS ROW
+   =========================================================================== */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stat {
+  padding: 12px 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  font-weight: var(--head-weight);
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.stat-name {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ===========================================================================
+   PROFILES, SIGN-IN, AND AVATARS
+   =========================================================================== */
+
+/* The header groups the mode toggle and the avatar together. */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The little round avatar in the header. */
+.avatar-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: var(--border-width) solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 200ms ease, transform 140ms ease;
+}
+
+.avatar-btn:hover {
+  border-color: var(--accent);
+}
+
+.avatar-btn:active {
+  transform: scale(0.94);
+}
+
+/* ---- The sign-in screen ---- */
+.signin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.profile-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 200ms ease, transform 140ms ease;
+}
+
+.profile-card:hover {
+  border-color: var(--accent);
+}
+
+.profile-card:active {
+  transform: scale(0.985);
+}
+
+.profile-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  font-size: 1.4rem;
+}
+
+.profile-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+}
+
+.profile-lock {
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  opacity: 0.6;
+}
+
+/* ---- The profile page header ---- */
+.profile-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar-big {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--gradient);
+  font-size: 2rem;
+}
+
+/* ---- Picking an emoji ---- */
+.avatar-grid {
+  display: grid;
+  /* auto-fill with a 46px minimum keeps every icon a real touch target on a
+     phone (8 across would squeeze them to about 26px) while still using the
+     full width on a desktop. */
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+}
+
+.avatar-opt {
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.avatar-opt[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ===========================================================================
+   HUB CARDS — the big "go here next" buttons on the home screen
+   =========================================================================== */
+.hub-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hub-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 76px;
+  padding: 16px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease, border-color 240ms ease, box-shadow 240ms ease;
+}
+
+.hub-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.hub-card:active {
+  transform: scale(0.985);
+}
+
+.hub-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: var(--gradient);
+}
+
+.hub-icon svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hub-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hub-title {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.2;
+}
+
+.hub-blurb {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* The chevron points right, so rotate the shared "down" icon. */
+.hub-arrow {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: rotate(-90deg);
+}
+
+.hub-card:hover .hub-arrow {
+  stroke: var(--accent);
+}
+
+/* ===========================================================================
+   MUSCLE GROUP PICKER — the Quick Workout screen
+   =========================================================================== */
+.muscle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.muscle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 94px;
+  padding: 12px 6px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms ease, border-color 240ms ease,
+              background-color 240ms ease;
+}
+
+.muscle-card:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.muscle-card:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.muscle-card[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.muscle-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.muscle-icon {
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.muscle-label {
+  font-family: var(--font-head);
+  font-size: 0.92rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.muscle-card[aria-pressed='true'] .muscle-label {
+  color: var(--accent);
+}
+
+.muscle-count {
+  font-size: 0.66rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ===========================================================================
+   GOALS AND PROGRESS BARS
+   =========================================================================== */
+.goal-list {
+  display: grid;
+  gap: 10px;
+}
+
+.goal-item {
+  padding: 14px 16px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* A finished goal gets an accent border so it stands out as done. */
+.goal-item.is-done {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.goal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.goal-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.2;
+}
+
+.goal-figure {
+  flex: 0 0 auto;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- The bar itself ---- */
+.progress-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--heat-0);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--gradient);
+  /* Animates when progress changes, so an update feels like it did something */
+  transition: width 560ms cubic-bezier(0.3, 0.9, 0.3, 1);
+}
+
+.goal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  min-height: 30px;
+}
+
+.goal-percent {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.goal-item.is-done .goal-percent {
+  color: var(--accent);
+}
+
+/* The "updated by you" / "this week" note on automatic goals */
+.goal-auto {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+}
+
+.goal-update {
+  min-height: 32px;
+  padding: 5px 14px;
+  border: var(--border-width) solid var(--accent);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.goal-update:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* The small "Main" chip on a goal option card */
+.option-badge {
+  margin-left: 7px;
+  vertical-align: middle;
+}
+
+/* ---- The goal rows in Settings ---- */
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.goal-row:last-of-type {
+  border-bottom: none;
+}
+
+.goal-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.goal-row .goal-name {
+  font-size: 0.94rem;
+}
+
+.goal-meta {
+  font-size: 0.76rem;
+  color: var(--text-faint);
+}
+
+.goal-row-target {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.goal-row-target input {
+  width: 78px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  text-align: center;
+}
+
+.goal-row-target input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+/* ===========================================================================
+   30-DAY HEATMAP
+   =========================================================================== */
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+}
+
+.heat-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background: var(--heat-0);
+  border: 1px solid transparent;
+  cursor: default;
+}
+
+.heat-cell[data-level='1'] { background: var(--heat-1); }
+.heat-cell[data-level='2'] { background: var(--heat-2); }
+.heat-cell[data-level='3'] { background: var(--heat-3); }
+
+/* Rest days get their own color plus a dot so they read as "on purpose" */
+.heat-cell.is-rest {
+  background: var(--heat-rest);
+}
+
+.heat-cell.is-rest::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.heat-cell.is-today {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+}
+
+.heat-legend .swatches {
+  display: flex;
+  gap: 4px;
+}
+
+.heat-legend .swatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+}
+
+/* ===========================================================================
+   BANNER (streak-broken notice, nutrition disclaimer, general callouts)
+   =========================================================================== */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+  border: var(--border-width) solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.banner h3 {
+  margin: 0;
+  color: var(--accent);
+}
+
+.banner p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* The small, friendly "check with a parent/coach/doctor" note. */
+.note {
+  display: flex;
+  gap: 10px;
+  padding: 13px 15px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.note-icon {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* ===========================================================================
+   CHIPS / TAGS
+   =========================================================================== */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+  white-space: nowrap;
+}
+
+.chip-accent {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===========================================================================
+   PLAN: DAY CARDS AND EXERCISE ROWS
+   =========================================================================== */
+.day-card {
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.day-card.is-today {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.day-card.is-rest {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* The clickable header row of a day card */
+.day-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.day-weekday {
+  flex: 0 0 46px;
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.day-card.is-today .day-weekday {
+  color: var(--accent);
+}
+
+.day-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.day-title {
+  font-family: var(--font-head);
+  font-size: 1.06rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.2;
+}
+
+.day-sub {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.day-chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  stroke: var(--text-faint);
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 260ms ease;
+}
+
+.day-card.is-open .day-chevron {
+  transform: rotate(180deg);
+}
+
+/* The exercise list, hidden until the card is opened */
+.day-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: var(--border-width) solid var(--border);
+}
+
+.day-card.is-open .day-body {
+  display: block;
+  animation: view-in 220ms ease-out;
+}
+
+.day-note {
+  margin: 12px 0 14px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+.exercise-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.exercise-row:last-child {
+  border-bottom: none;
+}
+
+.exercise-index {
+  flex: 0 0 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-head);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.exercise-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.exercise-name {
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.exercise-dose {
+  margin-top: 1px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+}
+
+.exercise-how {
+  margin-top: 5px;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.exercise-tags {
+  margin-top: 7px;
+}
+
+/* "FINISHER" / "Cool down" marker on bonus blocks */
+.exercise-label {
+  display: inline-block;
+  margin-bottom: 3px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-head);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ===========================================================================
+   QUICK WORKOUT
+   =========================================================================== */
+.quick-controls {
+  display: grid;
+  gap: 16px;
+}
+
+.control-group > .control-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Segmented picker used for time / equipment / energy */
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  padding: 5px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.seg-btn {
+  min-height: 46px;
+  padding: 8px 6px;
+  /* min-width: 0 lets the grid shrink these below their text width on a
+     narrow phone instead of overflowing the container. */
+  min-width: 0;
+  overflow-wrap: break-word;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-head);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.seg-btn[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* For the energy picker, where labels are longer */
+.segmented-stack {
+  grid-auto-flow: row;
+}
+
+/* ---- The timer ----------------------------------------------------------- */
+.timer-card {
+  padding: 20px 18px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.timer-phase {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.timer-clock {
+  font-family: var(--font-head);
+  font-size: 3.6rem;
+  font-weight: var(--head-weight);
+  line-height: 1;
+  letter-spacing: var(--head-spacing);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-now {
+  margin-top: 2px;
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  color: var(--accent);
+  min-height: 1.3em;
+}
+
+.timer-next {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  min-height: 1.3em;
+}
+
+/* Thin progress bar under the clock */
+.timer-bar {
+  height: 7px;
+  margin: 14px 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--heat-0);
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--radius-pill);
+  background: var(--gradient);
+  transition: width 260ms linear;
+}
+
+/* Timer turns accent-colored during work intervals */
+.timer-card.is-work .timer-clock { color: var(--accent); }
+.timer-card.is-rest .timer-clock { color: var(--text-dim); }
+
+/* ===========================================================================
+   FORMS
+   =========================================================================== */
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  /* 16px minimum stops iOS Safari from zooming in when you tap a field */
+  font-size: 16px;
+}
+
+.field textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-hint {
+  margin-top: 5px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* ---- Big tappable option cards (onboarding + settings) ------------------- */
+.option-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 15px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option-card:hover {
+  border-color: var(--border-strong);
+}
+
+.option-card[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.option-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 1.3rem;
+}
+
+.option-card[aria-pressed='true'] .option-icon {
+  background: var(--surface);
+}
+
+.option-text {
+  min-width: 0;
+}
+
+.option-label {
+  font-family: var(--font-head);
+  font-size: 1.02rem;
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1.2;
+}
+
+.option-blurb {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* ===========================================================================
+   ONBOARDING (full-screen overlay)
+   =========================================================================== */
+.onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  overflow-y: auto;
+  background: var(--bg);
+  background-image:
+    var(--texture),
+    radial-gradient(900px 600px at 10% -10%, var(--bg-accent-1), transparent 70%),
+    radial-gradient(700px 500px at 110% 110%, var(--bg-accent-2), transparent 70%);
+}
+
+.onboarding.is-open {
+  display: block;
+}
+
+.onboarding-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 28px 20px calc(36px + env(safe-area-inset-bottom));
+  padding-top: calc(28px + env(safe-area-inset-top));
+}
+
+/* Step progress dots */
+.steps {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 22px;
+}
+
+.step-dot {
+  flex: 1 1 0;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  transition: background-color 300ms ease;
+}
+
+.step-dot.is-done {
+  background: var(--accent);
+}
+
+.onboard-step {
+  display: none;
+}
+
+.onboard-step.is-active {
+  display: block;
+  animation: view-in 260ms ease-out;
+}
+
+.onboard-question {
+  margin-bottom: 4px;
+}
+
+.onboard-help {
+  margin-bottom: 18px;
+  color: var(--text-dim);
+  font-size: 0.93rem;
+}
+
+.onboard-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.onboard-nav .btn {
+  flex: 1 1 0;
+}
+
+/* ===========================================================================
+   LOG / HISTORY
+   =========================================================================== */
+.log-day {
+  margin-bottom: 18px;
+}
+
+.log-day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.log-day-name {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+}
+
+.log-day-total {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.log-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  font-size: 1rem;
+}
+
+.log-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.log-name {
+  font-weight: 700;
+  font-size: 0.94rem;
+  line-height: 1.3;
+}
+
+.log-meta {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.log-remove {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.log-remove:hover {
+  background: var(--surface-2);
+  color: #d2543d;
+}
+
+/* Tabs inside the Log view (Workouts / Meals) */
+.tab-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 16px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.empty-state {
+  padding: 30px 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  text-align: center;
+  font-size: 0.93rem;
+}
+
+/* ===========================================================================
+   NUTRITION
+   =========================================================================== */
+.meal-group {
+  margin-bottom: 14px;
+}
+
+.meal-group h4 {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 1.15em;
+}
+
+.bullet-list li {
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.bullet-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Habit checklist look (not interactive — just guidance) */
+.habit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.habit-list li {
+  display: flex;
+  gap: 9px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.habit-list li:last-child {
+  border-bottom: none;
+}
+
+.habit-list li::before {
+  content: '✓';
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* ===========================================================================
+   MODAL (celebrations + the "log activity" form)
+   =========================================================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(8, 10, 14, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal.is-open {
+  display: flex;
+  animation: fade-in 200ms ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px 20px calc(22px + env(safe-area-inset-bottom));
+  border: var(--border-width) solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: slide-up 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes slide-up {
+  from { transform: translateY(26px); opacity: 0.4; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.modal-head h2 {
+  margin: 0;
+}
+
+.modal-close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+/* ---- Celebration flavor -------------------------------------------------- */
+.celebrate-panel {
+  text-align: center;
+  border: 2px solid var(--accent);
+}
+
+.celebrate-badge {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin: 4px auto 14px;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: var(--accent-text);
+  font-family: var(--font-head);
+  font-size: 2.1rem;
+  font-weight: var(--head-weight);
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 480ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes pop-in {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.celebrate-title {
+  margin-bottom: 8px;
+  font-size: 1.7rem;
+  color: var(--accent);
+}
+
+.celebrate-body {
+  margin: 0 auto 18px;
+  max-width: 36ch;
+  color: var(--text-dim);
+}
+
+/* ===========================================================================
+   TOAST (brief confirmation messages)
+   =========================================================================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 90;
+  transform: translate(-50%, 16px);
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-head);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ===========================================================================
+   VERY SMALL PHONES (iPhone SE and similar, 320–375px wide)
+   Everything above is already mobile-first; these are just the few spots
+   that get tight at the narrowest widths.
+   =========================================================================== */
+@media (max-width: 375px) {
+  .seg-btn { font-size: 0.78rem; padding: 8px 3px; }
+  .mode-opt { min-width: 52px; padding: 0 8px; font-size: 0.76rem; }
+  .streak-ring { width: 170px; height: 170px; }
+  .streak-number { font-size: 4.4rem; }
+  .stat-value { font-size: 1.3rem; }
+  .stat-name { font-size: 0.62rem; letter-spacing: 0.05em; }
+  .nav-btn { font-size: 0.6rem; }
+  .btn-big { font-size: 1.02rem; }
+  .heatmap { gap: 4px; }
+  .timer-clock { font-size: 3rem; }
+  h1 { font-size: 1.65rem; }
+}
+
+/* ===========================================================================
+   SMALL UTILITIES
+   =========================================================================== */
+.muted { color: var(--text-dim); }
+.faint { color: var(--text-faint); }
+.small { font-size: 0.84rem; }
+.center { text-align: center; }
+.mt-0  { margin-top: 0; }
+.mt-1  { margin-top: 10px; }
+.mt-2  { margin-top: 18px; }
+.mt-3  { margin-top: 26px; }
+.mb-1  { margin-bottom: 10px; }
+.stack > * + * { margin-top: 10px; }
+
+/* Visible only to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,316 @@
+/* ============================================================================
+   layout.css — PAGE STRUCTURE
+   ============================================================================
+   The app shell: reset, the header, the scrolling content area, and the
+   bottom tab bar. Built mobile-first — the base styles are the phone layout,
+   and the media queries at the bottom add breathing room on bigger screens.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   RESET
+   ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  /* Stops iOS from auto-enlarging text in landscape */
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text);
+  /* Backstop against sideways scrolling: nothing in this design is meant to
+     sit outside the page, so clip anything that tries. `clip` is used rather
+     than `hidden` on purpose — `hidden` would turn the body into a scroll
+     container and break the sticky header and sidebar. */
+  overflow-x: clip;
+  background-color: var(--bg);
+  background-image:
+    var(--texture),
+    radial-gradient(1000px 600px at 8% -8%, var(--bg-accent-1), transparent 70%),
+    radial-gradient(800px 600px at 108% 108%, var(--bg-accent-2), transparent 70%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0 0 0.4em;
+  font-family: var(--font-head);
+  font-weight: var(--head-weight);
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: var(--head-line);
+}
+
+h1 { font-size: 1.9rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.1rem; }
+
+p { margin: 0 0 0.9em; }
+p:last-child { margin-bottom: 0; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Everything focusable gets a visible ring — important for keyboard users. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------------------------------------------------------------------------
+   APP SHELL
+   ------------------------------------------------------------------------- */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* min-height: 100dvh handles mobile browser toolbars that come and go */
+  min-height: 100dvh;
+}
+
+/* ---- Header ---------------------------------------------------------------
+   Sticky so the mode toggle is always reachable, which the brief calls for. */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+/* Older browsers that don't know color-mix still get a solid header. */
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .app-header { background: var(--bg); }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+/* The logo mark: a small chevron badge drawn with CSS + an inline SVG arrow */
+.logo-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--gradient);
+  box-shadow: var(--shadow-sm);
+}
+
+.logo-mark svg {
+  width: 19px;
+  height: 19px;
+  fill: var(--accent-text);
+}
+
+.logo-text {
+  font-family: var(--font-head);
+  font-weight: var(--head-weight);
+  font-size: 1.32rem;
+  text-transform: var(--head-transform);
+  letter-spacing: var(--head-spacing);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Main content area --------------------------------------------------- */
+.app-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px 16px 112px;   /* bottom padding clears the tab bar */
+}
+
+/* Each screen is a .view. Only the one with .is-active is shown. */
+.view {
+  display: none;
+  animation: view-in 280ms ease-out;
+}
+
+.view.is-active {
+  display: block;
+}
+
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.view-header {
+  margin-bottom: 18px;
+}
+
+.view-header h1 {
+  margin-bottom: 4px;
+}
+
+.view-intro {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Section headings inside a view */
+.section-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 26px 0 12px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.section-title .section-hint {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+}
+
+/* ---- Main navigation -----------------------------------------------------
+   On a phone this is a bottom tab bar (what thumbs expect). On a desktop
+   css/desktop.css turns this same element into a tall column down the left
+   — that's why it's called .main-nav and not .bottom-nav. */
+.main-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: space-around;
+  gap: 2px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: var(--border-width) solid var(--border);
+}
+
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .main-nav { background: var(--surface); }
+}
+
+.nav-btn {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  /* 56px tall keeps every tab comfortably tappable with a thumb */
+  min-height: 56px;
+  padding: 8px 2px 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: var(--label-transform);
+  letter-spacing: var(--label-spacing);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.nav-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-btn:hover {
+  color: var(--text-dim);
+}
+
+.nav-btn.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   BIGGER SCREENS
+   The app stays a single centered column — it's designed for phones — but it
+   gets more padding and a slightly larger streak number on a desktop.
+   ------------------------------------------------------------------------- */
+@media (min-width: 640px) {
+  .app-main {
+    padding: 28px 24px 120px;
+  }
+
+  h1 { font-size: 2.2rem; }
+
+  .app-header {
+    padding: 14px 24px;
+  }
+
+  .main-nav {
+    /* Float the tab bar into a pill on wider screens so it looks intentional
+       rather than stretched across a huge monitor. */
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 16px;
+    width: min(560px, calc(100% - 32px));
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 8px;
+  }
+
+  .nav-btn { font-size: 0.7rem; }
+}
+
+/* Tall phones in landscape: shrink the big streak block so it still fits. */
+@media (max-height: 520px) {
+  .streak-number { font-size: 4.2rem !important; }
+}

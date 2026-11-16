@@ -1,0 +1,395 @@
+/* ============================================================================
+   views/plan.js — THE "MY PLAN" SCREEN
+   ============================================================================
+   Shows the generated week: one card per day, tappable to expand into the
+   exercise list. Today's card starts open. Below the week is the nutrition
+   guidance for the user's goal.
+
+   Also owns completeToday(), which is what actually checks off a workout and
+   logs it toward the streak. The home screen calls that too.
+   ========================================================================== */
+
+MM.myGoalsView = (function () {
+  var ui = MM.ui;
+
+  /* --------------------------------------------------------------------------
+     Rough guess at how long a workout takes, so the day card can show it.
+     Every set is the work itself plus the rest after it.
+     -------------------------------------------------------------------------- */
+  function estimateMinutes(day) {
+    var seconds = day.blocks.reduce(function (total, block) {
+      // A set of reps takes roughly 40 seconds of actual work.
+      var workPerSet = block.timed ? block.seconds : 40;
+      return total + block.sets * (workPerSet + (block.rest || 0));
+    }, 0);
+
+    var minutes = Math.round(seconds / 60 / 5) * 5;   // nearest 5 minutes
+    return Math.max(10, Math.min(90, minutes));
+  }
+
+  /* --------------------------------------------------------------------------
+     Pick a sensible activity type for the log when a plan day is checked off.
+     -------------------------------------------------------------------------- */
+  function activityTypeForDay(day) {
+    var dayType = MM.DAY_TYPES[day.dayType];
+    if (!dayType) return 'Home workout';
+
+    if (dayType.kind === 'cardio') return 'Run';
+    if (dayType.kind === 'mobility') return 'Stretching / yoga';
+    if (dayType.kind === 'strength' || dayType.kind === 'power') return 'Lifting';
+    return 'Home workout';
+  }
+
+  /* --------------------------------------------------------------------------
+     THE CHECK-OFF. This is what makes a plan workout count for the streak.
+     -------------------------------------------------------------------------- */
+  function completeToday() {
+    var today = MM.dates.today();
+    var day = MM.planBuilder.dayForDate(today);
+
+    if (!day || day.kind === 'rest') {
+      ui.toast('Today is a rest day in your plan.');
+      return;
+    }
+
+    if (MM.store.get().planCompletions[today]) {
+      ui.toast('Already checked off today.');
+      return;
+    }
+
+    // One update so the app only re-renders once.
+    MM.store.update(function (d) {
+      d.activities.push({
+        id: MM.store.newId(),
+        date: today,
+        type: activityTypeForDay(day),
+        minutes: estimateMinutes(day),
+        source: 'plan',
+        notes: day.title,
+      });
+      d.planCompletions[today] = day.id;
+      d.streak.restartNotice = null;
+    });
+
+    ui.toast(MM.copy('todayDoneMsg'));
+  }
+
+  /* --------------------------------------------------------------------------
+     RENDER
+     -------------------------------------------------------------------------- */
+  function render() {
+    var data = MM.store.get();
+    var host = ui.$('#goals-content');
+
+    ui.$('#goals-heading').textContent = MM.copy('goalsPageTitle');
+    ui.$('#goals-intro').textContent = MM.copy('goalsPageIntro');
+
+    // ---- No plan yet -----------------------------------------------------
+    // The goals still show above the prompt: someone can have goals without
+    // a built plan, and hiding what they're working toward would be odd on a
+    // page called My Goals.
+    if (!data.plan) {
+      host.innerHTML = '' +
+        goalProgressHTML() +
+        '<div class="card card-accent mt-2">' +
+          '<h3 class="card-title">' + ui.esc(MM.copy('noPlan')) + '</h3>' +
+          '<p class="small muted">Five quick questions: your goal, your experience, ' +
+            'how many days you have, your equipment, and your sport.</p>' +
+          '<button type="button" class="btn btn-gradient btn-big btn-block mt-1" id="plan-setup">' +
+            ui.esc(MM.copy('planSetupButton')) +
+          '</button>' +
+        '</div>';
+      return;   // #plan-setup is handled by the delegated listener in init()
+    }
+
+    // The page runs in the order the user thinks about it:
+    //   your goals -> the exercise plan that gets you there -> how to eat.
+    host.innerHTML =
+      goalProgressHTML() +
+      planSummaryHTML(data) +
+      weekHTML(data) +
+      nutritionHTML(data);
+  }
+
+  /* ---- The goals themselves, with their progress bars -------------------- */
+  function goalProgressHTML() {
+    var goals = MM.goalTracker.all();
+
+    var bars = goals.length
+      ? '<div class="goal-list">' + goals.map(MM.goalProgress.goalRowHTML).join('') + '</div>'
+      : '<div class="empty-state">No goals yet.</div>';
+
+    return '' +
+      '<div class="section-title">' +
+        '<h2>' + ui.esc(MM.copy('goalsPageTitle')) + '</h2>' +
+        '<button type="button" class="btn btn-ghost" id="goals-add">+ Add goal</button>' +
+      '</div>' +
+      bars;
+  }
+
+  /* ---- The chips at the top describing the plan -------------------------- */
+  function planSummaryHTML(data) {
+    var plan = data.plan;
+    var experience = MM.getExperience(plan.experience);
+    var equipment = MM.EQUIPMENT_OPTIONS.find(function (e) { return e.id === plan.equipment; });
+
+    // Let the user know if Chill mode gave back a rest day.
+    var trimmedNote = '';
+    if (plan.daysPerWeek < plan.requestedDaysPerWeek) {
+      trimmedNote = '<p class="small faint mt-1">Chill mode trimmed this to ' +
+        plan.daysPerWeek + ' training days so you have real recovery. ' +
+        'Switch to Grind in the header for the full ' + plan.requestedDaysPerWeek + '.</p>';
+    }
+
+    // One chip per goal, so a multi-goal week is obvious at a glance.
+    var goalChips = (plan.goalLabels || [plan.goalLabel]).map(function (label, i) {
+      return '<span class="chip chip-accent">' + ui.esc(label) +
+        (i === 0 && plan.goalLabels && plan.goalLabels.length > 1 ? ' · main' : '') +
+        '</span>';
+    }).join('');
+
+    return '' +
+      '<div class="card">' +
+        '<div class="chip-row">' +
+          goalChips +
+          '<span class="chip">' + plan.daysPerWeek + ' days / week</span>' +
+          '<span class="chip">' + ui.esc(experience.label) + '</span>' +
+          '<span class="chip">' + ui.esc(equipment ? equipment.label : plan.equipment) + '</span>' +
+          (plan.sport ? '<span class="chip">' + ui.esc(plan.sport) + '</span>' : '') +
+          '<span class="chip">' + ui.esc(MM.copy('modeName', plan.mode)) + ' difficulty</span>' +
+        '</div>' +
+        trimmedNote +
+        '<div class="btn-row mt-1">' +
+          '<button type="button" class="btn btn-outline btn-ghost" id="plan-shuffle">Shuffle exercises</button>' +
+          '<button type="button" class="btn btn-outline btn-ghost" id="plan-change-goal">Change goal</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---- The seven day cards ---------------------------------------------- */
+  function weekHTML(data) {
+    var todayIndex = MM.dates.weekdayIndex(MM.dates.today());
+    var weekStart = MM.dates.weekStart(MM.dates.today());
+
+    var cards = data.plan.days.map(function (day, index) {
+      // The real date this plan day falls on in the current week — that's how
+      // we know whether it has been checked off.
+      var dateKey = MM.dates.addDays(weekStart, index);
+      var isToday = index === todayIndex;
+      var isDone = data.planCompletions[dateKey] === day.id;
+
+      return day.kind === 'rest'
+        ? restDayHTML(day, isToday)
+        : workoutDayHTML(day, isToday, isDone, dateKey);
+    }).join('');
+
+    // .day-grid becomes two columns on a desktop (css/desktop.css).
+    return '<div class="section-title"><h2>' + ui.esc(MM.copy('goalsPlanHeading')) + '</h2>' +
+      '<span class="section-hint">Mon – Sun</span></div>' +
+      '<p class="view-intro mb-1">' + ui.esc(MM.copy('planIntro')) + '</p>' +
+      '<div class="day-grid">' + cards + '</div>';
+  }
+
+  function restDayHTML(day, isToday) {
+    return '' +
+      '<div class="day-card is-rest' + (isToday ? ' is-today' : '') + '">' +
+        '<div class="day-head" style="cursor:default">' +
+          '<span class="day-weekday">' + ui.esc(day.weekday) + '</span>' +
+          '<span class="day-info">' +
+            '<span class="day-title">' + ui.esc(MM.copy('planRestLabel')) + '</span>' +
+            '<span class="day-sub">' + ui.esc(MM.copy('planRestNote')) + '</span>' +
+          '</span>' +
+          (isToday ? '<span class="chip chip-accent">' + ui.esc(MM.copy('planTodayLabel')) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+  }
+
+  function workoutDayHTML(day, isToday, isDone, dateKey) {
+    var minutes = estimateMinutes(day);
+
+    var checkButton = isToday
+      ? '<button type="button" class="btn btn-block mt-1 ' +
+          (isDone ? 'btn-done' : 'btn-primary') + '" data-complete-day="' + ui.esc(dateKey) + '"' +
+          (isDone ? ' disabled' : '') + '>' +
+          ui.esc(isDone ? MM.copy('planCheckedButton') : MM.copy('planCheckButton')) +
+        '</button>'
+      : '';
+
+    return '' +
+      '<div class="day-card' + (isToday ? ' is-today is-open' : '') + '">' +
+        '<button type="button" class="day-head" data-toggle-day>' +
+          '<span class="day-weekday">' + ui.esc(day.weekday) + '</span>' +
+          '<span class="day-info">' +
+            '<span class="day-title">' + ui.esc(day.title) + '</span>' +
+            '<span class="day-sub">' + day.blocks.length + ' exercises · about ' + minutes + ' min' +
+              (isDone ? ' · done ✓' : '') + '</span>' +
+          '</span>' +
+          (isToday ? '<span class="chip chip-accent">' + ui.esc(MM.copy('planTodayLabel')) + '</span>' : '') +
+          '<svg class="day-chevron" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-chevron"></use></svg>' +
+        '</button>' +
+        '<div class="day-body">' +
+          '<p class="day-note">' + ui.esc(day.note) + '</p>' +
+          day.blocks.map(function (block, i) {
+            return ui.exerciseRowHTML(block, i);
+          }).join('') +
+          checkButton +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---- Nutrition ---------------------------------------------------------
+     The MAIN goal (the first one picked) drives the guidance, since trying to
+     merge "eat enough to gain" with "lose weight" would produce nonsense.
+     Any other goals get their key points listed underneath. */
+  function nutritionHTML(data) {
+    var goalIds = data.profile.goals;
+    var guide = MM.nutritionForGoal(goalIds[0]);
+
+    // Key points from the user's other goals, if they picked more than one.
+    var secondary = goalIds.slice(1).map(function (id) {
+      var other = MM.nutritionForGoal(id);
+      return '' +
+        '<div class="meal-group">' +
+          '<h4>' + ui.esc(MM.getGoal(id).label) + '</h4>' +
+          '<ul class="bullet-list">' +
+            other.priorities.slice(0, 2).map(function (p) {
+              return '<li>' + ui.esc(p) + '</li>';
+            }).join('') +
+          '</ul>' +
+        '</div>';
+    }).join('');
+
+    var secondaryCard = secondary
+      ? '<div class="card">' +
+          '<h3 class="card-title">Your other goals</h3>' +
+          '<p class="small muted">Your main goal sets the guidance above. ' +
+            'Here is what matters most for the rest.</p>' +
+          secondary +
+        '</div>'
+      : '';
+
+    var mealGroups = Object.keys(guide.meals).map(function (slot) {
+      return '' +
+        '<div class="meal-group">' +
+          '<h4>' + ui.esc(slot) + '</h4>' +
+          '<ul class="bullet-list">' +
+            guide.meals[slot].map(function (idea) {
+              return '<li>' + ui.esc(idea) + '</li>';
+            }).join('') +
+          '</ul>' +
+        '</div>';
+    }).join('');
+
+    // .nutrition-grid becomes 2 columns on a desktop, 3 on a big monitor.
+    // .span-all keeps the summary and the disclaimer full width.
+    return '' +
+      '<div class="section-title">' +
+        '<h2>' + ui.esc(MM.copy('goalsDietHeading')) + '</h2>' +
+        '<span class="section-hint">' + ui.esc(MM.copy('nutritionTitle')) + '</span>' +
+      '</div>' +
+
+      '<div class="nutrition-grid">' +
+
+      '<div class="card span-all">' +
+        '<h3 class="card-title">' + ui.esc(guide.headline) + '</h3>' +
+        '<p class="small">' + ui.esc(guide.summary) + '</p>' +
+        '<p class="small faint">' + ui.esc(guide.roughRange) + '</p>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<h3 class="card-title">What matters most for your goal</h3>' +
+        '<ul class="habit-list">' +
+          guide.priorities.map(function (p) {
+            return '<li>' + ui.esc(p) + '</li>';
+          }).join('') +
+        '</ul>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<h3 class="card-title">Daily habits for everyone</h3>' +
+        '<ul class="habit-list">' +
+          MM.NUTRITION_BASE_HABITS.map(function (h) {
+            return '<li>' + ui.esc(h) + '</li>';
+          }).join('') +
+        '</ul>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<h3 class="card-title">Meal and snack ideas</h3>' +
+        '<p class="small muted">' + ui.esc(MM.copy('nutritionIntro')) + '</p>' +
+        mealGroups +
+      '</div>' +
+
+      '<div class="card">' +
+        '<h3 class="card-title">Simple tips</h3>' +
+        '<ul class="bullet-list">' +
+          guide.tips.map(function (t) { return '<li>' + ui.esc(t) + '</li>'; }).join('') +
+        '</ul>' +
+      '</div>' +
+
+      secondaryCard +
+
+      '<div class="span-all">' + ui.disclaimerHTML() + '</div>' +
+
+      '</div>';   // .nutrition-grid
+  }
+
+  /* --------------------------------------------------------------------------
+     CLICK HANDLING
+     One delegated listener attached once at startup. render() rewrites the
+     HTML inside #goals-content constantly, so attaching listeners during
+     render would pile up duplicates every time the screen redraws.
+     -------------------------------------------------------------------------- */
+  function init() {
+    ui.$('#goals-content').addEventListener('click', function (event) {
+      // Expand / collapse a day card
+      var head = event.target.closest('[data-toggle-day]');
+      if (head) {
+        head.closest('.day-card').classList.toggle('is-open');
+        return;
+      }
+
+      // Check off today's workout
+      if (event.target.closest('[data-complete-day]')) {
+        completeToday();
+        return;
+      }
+
+      // Rebuild the plan with different exercise picks
+      if (event.target.closest('#plan-shuffle')) {
+        MM.planBuilder.regenerate();
+        ui.toast('Fresh exercises loaded.');
+        return;
+      }
+
+      if (event.target.closest('#plan-change-goal')) {
+        MM.app.showView('settings');
+        return;
+      }
+
+      if (event.target.closest('#plan-setup')) {
+        MM.onboarding.open();
+        return;
+      }
+
+      // The goal section at the top of this page reuses the same buttons as
+      // the Home screen.
+      if (event.target.closest('#goals-add')) {
+        MM.goalProgress.openAddForm();
+        return;
+      }
+
+      var updateBtn = event.target.closest('[data-update-goal]');
+      if (updateBtn) {
+        MM.goalProgress.openUpdateForm(updateBtn.dataset.updateGoal);
+      }
+    });
+  }
+
+  return {
+    init: init,
+    render: render,
+    completeToday: completeToday,
+    estimateMinutes: estimateMinutes,
+  };
+})();
