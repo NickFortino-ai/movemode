@@ -27,13 +27,23 @@ MM.logView = (function () {
 
     ui.$('#entry-modal-body').innerHTML = '' +
       '<form id="activity-form">' +
+        // A plain text box, not a dropdown. Whatever you did counts, and a
+        // fixed list of gym activities would quietly say otherwise.
         '<div class="field">' +
-          '<label for="activity-type">Activity</label>' +
-          '<select id="activity-type">' +
-            MM.ACTIVITY_TYPES.map(function (type) {
-              return '<option value="' + ui.esc(type) + '">' + ui.esc(type) + '</option>';
-            }).join('') +
-          '</select>' +
+          '<label for="activity-type">What did you do?</label>' +
+          '<input type="text" id="activity-type" maxlength="60" required ' +
+            'autocomplete="off" placeholder="' +
+            ui.esc(MM.copy('logWhatPlaceholder')) + '">' +
+          '<p class="field-hint">Anything that got you moving. Walking the dog, ' +
+            'raking leaves and dancing around your room all count.</p>' +
+        '</div>' +
+
+        // One-tap shortcuts that just fill the box in.
+        '<div class="chip-row suggestion-row" id="activity-suggestions">' +
+          MM.ACTIVITY_SUGGESTIONS.map(function (type) {
+            return '<button type="button" class="chip chip-tap" data-suggest="' +
+              ui.esc(type) + '">' + ui.esc(type) + '</button>';
+          }).join('') +
         '</div>' +
 
         '<div class="field-row">' +
@@ -58,16 +68,30 @@ MM.logView = (function () {
       '</form>';
 
     ui.openModal('entry-modal');
+    ui.$('#activity-type').focus();
+
+    // Tapping a suggestion fills the box, leaving it editable.
+    ui.$('#activity-suggestions').addEventListener('click', function (event) {
+      var chip = event.target.closest('[data-suggest]');
+      if (!chip) return;
+
+      var box = ui.$('#activity-type');
+      box.value = chip.dataset.suggest;
+      box.focus();
+    });
 
     // The form element is brand new each time, so this listener can't pile up.
     ui.$('#activity-form').addEventListener('submit', function (event) {
       event.preventDefault();
 
+      var what = ui.$('#activity-type').value.trim();
+      if (!what) return;            // the box is required, but be safe
+
       var minutes = Number(ui.$('#activity-minutes').value);
       if (!minutes || minutes < 1) minutes = 1;
 
       MM.store.addActivity({
-        type: ui.$('#activity-type').value,
+        type: what,
         minutes: Math.min(600, minutes),
         date: ui.$('#activity-date').value || today,
         notes: ui.$('#activity-notes').value.trim(),

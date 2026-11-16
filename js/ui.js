@@ -230,22 +230,71 @@ MM.ui = (function () {
       '</div>';
   }
 
-  /* ---- A small emoji for each activity type, used in the log ------------- */
-  var ACTIVITY_ICONS = {
-    'Walk': '🚶',
-    'Run': '🏃',
-    'Lifting': '🏋️',
-    'Sport practice': '🥎',
-    'Game': '🏆',
-    'Bike': '🚲',
-    'Swim': '🏊',
-    'Stretching / yoga': '🧘',
-    'Home workout': '🏠',
-    'Other': '✅',
-  };
+  /* ---- A small emoji for what someone logged, used in the log ------------
+     People TYPE what they did, so there is no fixed list to look up. Instead
+     we look for a keyword anywhere in what they wrote: "walked the dog on
+     the trail" finds "dog" and shows 🐕.
+
+     Order matters — the first match wins. More specific words go first, so
+     "walked the dog" gets the dog rather than the walker. Anything we don't
+     recognise still gets a tick, because it still counts. */
+  var ACTIVITY_ICONS = [
+    ['dog', '🐕'],
+    ['hik', '🥾'],
+    ['walk', '🚶'],
+    ['step', '🚶'],
+    ['stair', '🚶'],
+    ['run', '🏃'],
+    ['jog', '🏃'],
+    ['sprint', '🏃'],
+    ['bike', '🚴'],
+    ['cycl', '🚴'],
+    ['swim', '🏊'],
+    ['dance', '💃'],
+    ['danc', '💃'],
+    ['yoga', '🧘'],
+    ['stretch', '🧘'],
+    ['lift', '🏋️'],
+    ['weight', '🏋️'],
+    ['gym', '🏋️'],
+    ['push', '🏋️'],
+    ['skate', '🛹'],
+    ['ski', '⛷️'],
+    ['climb', '🧗'],
+    ['row', '🚣'],
+    ['surf', '🏄'],
+    ['soccer', '⚽'],
+    ['football', '🏈'],
+    ['basketball', '🏀'],
+    ['tennis', '🎾'],
+    ['practice', '🥎'],
+    ['game', '🏆'],
+    ['sport', '🥎'],
+    ['yard', '🍂'],
+    ['rake', '🍂'],
+    ['leaves', '🍂'],
+    ['mow', '🌿'],
+    ['garden', '🌿'],
+    ['shovel', '❄️'],
+    ['snow', '❄️'],
+    ['clean', '🧹'],
+    ['chore', '🧹'],
+    ['housework', '🧹'],
+    ['vacuum', '🧹'],
+    ['play', '🤸'],
+    ['outside', '🌳'],
+    ['workout', '💥'],
+  ];
 
   function activityIcon(type) {
-    return ACTIVITY_ICONS[type] || '✅';
+    var text = String(type || '').toLowerCase();
+
+    for (var i = 0; i < ACTIVITY_ICONS.length; i++) {
+      if (text.indexOf(ACTIVITY_ICONS[i][0]) !== -1) {
+        return ACTIVITY_ICONS[i][1];
+      }
+    }
+    return '✅';
   }
 
   var MEAL_ICONS = {

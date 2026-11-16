@@ -145,7 +145,7 @@ movemode/
 
 | Screen | What it's for |
 |---|---|
-| **Home** | Deliberately the quietest screen. You land here and see two things: **how you're doing** (streak, one button to log) and **what you're working toward** (goal progress bars) — plus one fact about why movement matters. Detail lives elsewhere on purpose. |
+| **Home** | Deliberately the quietest screen. A fact about why movement matters banners the top (tap it for another), then two things: **how you're doing** (streak, one button to log) and **what you're working toward** (goal progress bars). Detail lives elsewhere on purpose. |
 | **My Goals** | Everything tied to your goals in one place: the goals themselves with progress bars, the weekly **exercise plan** built from them, and the **diet plan** that matches. |
 | **Quick Workout** | Pick a muscle group — Chest, Back, Legs, Core… — and get every exercise in the library that trains it, filtered to the equipment you have. Optionally start a timed circuit from the list. |
 | **Log** | Workout and meal history, plus the totals and the 30-day grid. These moved off Home to keep it calm — this is the screen you come to for detail. |
@@ -320,6 +320,25 @@ Worked example:
 | Sat | Nothing again | 0 — Friday was missed; restart message appears |
 
 ---
+
+## Logging what you did
+
+Tapping **I moved today** opens a box that asks "What did you do?" — and it's
+a plain **text box**, not a dropdown. You type whatever it was: *walked to
+school*, *raked the whole yard*, *danced around my room*. Underneath are
+one-tap shortcuts (from `MM.ACTIVITY_SUGGESTIONS` in
+`js/data/plan-templates.js`) that just fill the box in for you.
+
+This matters more than it looks. A fixed dropdown of gym activities quietly
+tells someone that what they did doesn't count, which is the opposite of the
+point of this site. If you edit the suggestions, keep the everyday ones in
+there.
+
+Because the text is free-form, the little icon in the log is worked out by
+looking for a keyword in what you wrote — "walked the dog on the trail" finds
+*dog* and shows 🐕. That list is `ACTIVITY_ICONS` in `js/ui.js`; first match
+wins, so put more specific words first. Anything unrecognised still gets a
+tick, because it still counts.
 
 ## How to add a "why movement matters" fact
 

@@ -259,9 +259,32 @@ MM.WEEKDAYS_LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sat
 /* ----------------------------------------------------------------------------
    ACTIVITY TYPES — the options in the "I moved today" form and manual logs.
    -------------------------------------------------------------------------- */
-MM.ACTIVITY_TYPES = [
-  'Walk', 'Run', 'Lifting', 'Sport practice', 'Game',
-  'Bike', 'Swim', 'Stretching / yoga', 'Home workout', 'Other',
+/* ----------------------------------------------------------------------------
+   ACTIVITY SUGGESTIONS
+
+   When you log something you TYPE what you did — it is a plain text box, not
+   a dropdown. These are just one-tap shortcuts that fill the box for you.
+
+   Keep the everyday ones in here. Walking the dog, raking leaves and dancing
+   around your room are all movement, and a list made only of gym words
+   quietly tells people that what they did does not count. That is the exact
+   opposite of the point of this site.
+   -------------------------------------------------------------------------- */
+MM.ACTIVITY_SUGGESTIONS = [
+  'Walk',
+  'Walked the dog',
+  'Run',
+  'Bike ride',
+  'Swim',
+  'Stretching',
+  'Danced around',
+  'Sport practice',
+  'Lifting',
+  'Played outside',
+  'Housework',
+  'Yard work',
+  'Took the stairs',
+  'Hike',
 ];
 
 // Meal slots for the food log.

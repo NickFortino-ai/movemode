@@ -53,19 +53,22 @@ MM.homeView = (function () {
 
     var isMind = shownFact.tag === 'mind';
 
+    // Laid out as a banner across the top of the home screen: the label on
+    // the left, the fact in the middle, the hint to tap on the right. On a
+    // phone these wrap into a stack.
     host.innerHTML = '' +
       '<div class="why-card" id="why-card">' +
-        '<div class="why-head">' +
-          '<span class="chip ' + (isMind ? 'chip-accent' : '') + '">' +
-            (isMind ? '🧠 Your mind' : '🫀 Your body') +
-          '</span>' +
-          '<span class="why-more">Tap for another</span>' +
-        '</div>' +
-        '<p class="why-fact">' + ui.esc(shownFact.fact) + '</p>' +
-        '<p class="why-because">' + ui.esc(shownFact.why) + '</p>' +
+        '<span class="chip ' + (isMind ? 'chip-accent' : '') + ' why-tag">' +
+          (isMind ? '🧠 Your mind' : '🫀 Your body') +
+        '</span>' +
+        '<span class="why-text">' +
+          '<span class="why-fact">' + ui.esc(shownFact.fact) + '</span>' +
+          '<span class="why-because">' + ui.esc(shownFact.why) + '</span>' +
+        '</span>' +
+        '<span class="why-more">Tap for another</span>' +
       '</div>' +
       (isMind
-        ? '<p class="small faint mt-1">' + ui.esc(MM.MOVEMENT_MIND_NOTE) + '</p>'
+        ? '<p class="small faint why-note">' + ui.esc(MM.MOVEMENT_MIND_NOTE) + '</p>'
         : '');
   }
 

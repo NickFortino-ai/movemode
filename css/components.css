@@ -329,37 +329,45 @@
    The point of the whole site, so it gets a spot on the home screen.
    Tapping it shows a different fact.
    =========================================================================== */
+/* A banner across the top of the home screen. Flex with wrapping, so it
+   reads as one line on a wide screen and stacks neatly on a phone. */
 .why-card {
-  margin-top: 14px;
-  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 14px 18px;
   border: var(--border-width) solid var(--border);
   border-left: 4px solid var(--accent);
   border-radius: var(--radius);
   background: var(--surface);
+  text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 200ms ease, transform 140ms ease;
+  transition: border-color 200ms ease, background-color 200ms ease;
 }
 
 .why-card:hover {
   border-color: var(--border-strong);
   border-left-color: var(--accent);
+  background: var(--surface-2);
 }
 
-.why-card:active {
-  transform: scale(0.99);
+.why-tag {
+  flex: 0 0 auto;
 }
 
-.why-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 9px;
+.why-text {
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
 .why-more {
-  font-size: 0.68rem;
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 0.66rem;
   color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -367,9 +375,9 @@
 }
 
 .why-fact {
-  margin: 0 0 5px;
+  display: block;
   font-family: var(--font-head);
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   font-weight: var(--head-weight);
   text-transform: var(--head-transform);
   letter-spacing: var(--head-spacing);
@@ -377,10 +385,16 @@
 }
 
 .why-because {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  display: block;
+  margin-top: 2px;
+  font-size: 0.88rem;
+  line-height: 1.45;
   color: var(--text-dim);
+}
+
+/* The "movement is not a replacement for real help" line, under a mind fact */
+.why-note {
+  margin: -8px 0 18px;
 }
 
 /* ===========================================================================
@@ -1047,6 +1061,33 @@
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* A chip you can actually tap — used for the "what did you do?" shortcuts
+   that fill in the text box for you. */
+.chip-tap {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease,
+              color 160ms ease;
+}
+
+.chip-tap:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chip-tap:active {
+  transform: scale(0.96);
+}
+
+/* The row of shortcuts sits just under the box it fills in. */
+.suggestion-row {
+  margin: -6px 0 16px;
 }
 
 /* ===========================================================================

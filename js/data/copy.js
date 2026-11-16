@@ -100,6 +100,7 @@ MM.COPY = {
     // Log
     logTitle: 'Your log',
     logIntro: 'A record of what you have done. No calorie counting, no judgment.',
+    logWhatPlaceholder: 'Walked to school, danced around, raked the yard…',
     logEmpty: 'Nothing logged yet. Your first entry can be a 10 minute walk.',
     mealsEmpty: 'No meals logged yet. Jotting down what you eat is just useful information, nothing more.',
 
@@ -203,6 +204,7 @@ MM.COPY = {
     // Log
     logTitle: 'THE RECEIPTS',
     logIntro: 'Numbers do not lie. This is the proof of what you actually did.',
+    logWhatPlaceholder: 'Sprints, leg day, walked the dog…',
     logEmpty: 'EMPTY. Nothing to show yet. Change that.',
     mealsEmpty: 'NO MEALS LOGGED. You cannot build on an empty tank.',
 
