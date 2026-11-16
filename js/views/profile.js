@@ -250,7 +250,7 @@ MM.profileView = (function () {
           d.profile.equipment = ui.$('#profile-equipment').value;
           d.profile.daysPerWeek = Number(ui.$('#profile-days').value);
           d.profile.sport = ui.$('#profile-sport').value.trim().slice(0, 40);
-          d.plan = MM.planBuilder.build(d.profile, d.mode);
+          d.plan = MM.planBuilder.build(d.profile, d.mode, d.customDays);
         });
         ui.toast('Plan rebuilt with your new setup.');
         return;

@@ -21,6 +21,9 @@
        { id, name, category, metric, target, unit, start, current, createdAt }
      ],
      plan: { ... },            // generated weekly plan (see plan-builder.js)
+     customDays: {             // days the user edited or built themselves,
+       '0': { ...day... }      // keyed by weekday (0 = Monday). Kept OUTSIDE
+     },                        // the plan so regenerating never wipes them.
      activities: [             // every logged workout / movement
        { id, date:'2026-03-14', type, minutes, source, notes }
      ],
@@ -66,6 +69,7 @@ MM.store = (function () {
       },
       trackedGoals: [],
       plan: null,
+      customDays: {},
       activities: [],
       meals: [],
       restDays: [],

@@ -152,7 +152,7 @@ MM.onboarding = (function () {
     MM.store.update(function (d) {
       d.profile = draft;
       d.onboarded = true;
-      d.plan = MM.planBuilder.build(draft, d.mode);
+      d.plan = MM.planBuilder.build(draft, d.mode, d.customDays);
       // save() syncs the progress-bar goals to the chosen categories.
     });
 

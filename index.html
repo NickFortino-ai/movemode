@@ -406,6 +406,31 @@
 
 
 <!-- ==========================================================================
+     WORKOUT EDITOR — a full-screen overlay for changing one day's workout,
+     or building one from scratch. See js/views/workout-editor.js.
+     ======================================================================= -->
+<div class="onboarding" id="workout-editor" role="dialog" aria-modal="true"
+     aria-labelledby="editor-title">
+  <div class="onboarding-inner">
+    <div class="editor-head">
+      <div>
+        <h1 id="editor-title">Edit workout</h1>
+        <p class="onboard-help" id="editor-sub"></p>
+      </div>
+      <button type="button" class="modal-close" id="editor-close" aria-label="Close">×</button>
+    </div>
+
+    <div id="editor-body"></div>
+
+    <div class="editor-footer">
+      <button type="button" class="btn btn-outline" id="editor-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="editor-save">Save workout</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================================================
      MODALS
      ======================================================================= -->
 
@@ -458,6 +483,7 @@
 <script src="js/plan-builder.js"></script>
 <script src="js/quick-workout.js"></script>
 <script src="js/timer.js"></script>
+<script src="js/chart.js"></script>
 
 <!-- 3. Shared UI helpers -->
 <script src="js/ui.js"></script>
@@ -468,6 +494,7 @@
 <script src="js/views/onboarding.js"></script>
 <script src="js/views/goal-progress.js"></script>
 <script src="js/views/home.js"></script>
+<script src="js/views/workout-editor.js"></script>
 <script src="js/views/my-goals.js"></script>
 <script src="js/views/quick.js"></script>
 <script src="js/views/log.js"></script>

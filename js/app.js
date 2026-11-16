@@ -66,7 +66,7 @@ MM.app = (function () {
 
     MM.store.update(function (d) {
       d.mode = mode;
-      if (d.plan) d.plan = MM.planBuilder.build(d.profile, mode);
+      if (d.plan) d.plan = MM.planBuilder.build(d.profile, mode, d.customDays);
     });
 
     applyMode(mode);
@@ -206,6 +206,9 @@ MM.app = (function () {
     // ---- Bottom tab bar ----
     ui.$$('.nav-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        // Tapping the My Goals tab always lands on the list, even if you
+        // were last looking at one goal's own page.
+        if (btn.dataset.view === 'goals') MM.myGoalsView.backToList();
         showView(btn.dataset.view);
       });
     });
@@ -221,6 +224,7 @@ MM.app = (function () {
     MM.onboarding.init();
     MM.goalProgress.init();
     MM.homeView.init();
+    MM.workoutEditor.init();
     MM.myGoalsView.init();
     MM.quickView.init();
     MM.logView.init();

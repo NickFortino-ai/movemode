@@ -837,6 +837,154 @@
   color: var(--accent);
 }
 
+/* ---- The deadline countdown on a goal ---- */
+.goal-due {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Getting close, or already past. Never alarming — a missed deadline on a
+   movement goal is not a crisis. */
+.goal-due.is-soon { color: var(--accent-2); }
+.goal-due.is-over { color: #d2543d; }
+
+/* ---- A goal in the list, which is a link to its own page ---- */
+.goal-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.goal-open .goal-item {
+  transition: border-color 200ms ease, transform 140ms ease;
+}
+
+.goal-open:hover .goal-item {
+  border-color: var(--accent);
+}
+
+.goal-open:active .goal-item {
+  transform: scale(0.99);
+}
+
+/* Tapping a goal on the home screen opens its page too. */
+#home-goals .goal-item {
+  cursor: pointer;
+}
+
+/* ---- One goal's own page ---- */
+.back-link {
+  margin-bottom: 12px;
+  padding-left: 0;
+}
+
+.goal-big-figure {
+  margin-bottom: 10px;
+  font-family: var(--font-head);
+  font-size: 1.9rem;
+  font-weight: var(--head-weight);
+  letter-spacing: var(--head-spacing);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-date {
+  flex: 1 1 auto;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+.history-value {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-change {
+  flex: 0 0 auto;
+  min-width: 46px;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-area {
+  fill: var(--accent);
+  opacity: 0.12;
+  stroke: none;
+}
+
+.chart-dot {
+  fill: var(--accent);
+  stroke: var(--surface-2);
+  stroke-width: 1.5;
+}
+
+.chart-dot.is-last {
+  stroke-width: 2;
+}
+
+.chart-target {
+  stroke: var(--text-faint);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+
+.chart-target-label,
+.chart-axis {
+  fill: var(--text-faint);
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+.chart-empty {
+  margin: 4px 0 2px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
 /* The "updated by you" / "this week" note on automatic goals */
 .goal-auto {
   font-size: 0.72rem;
@@ -897,6 +1045,12 @@
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
+}
+
+/* The date box next to the target in Settings */
+.goal-row-date {
+  width: 140px !important;
+  font-size: 15px !important;
 }
 
 .goal-row-target input {
@@ -1604,6 +1758,218 @@
 }
 
 .onboard-nav .btn {
+  flex: 1 1 0;
+}
+
+/* ===========================================================================
+   WORKOUT EDITOR
+   =========================================================================== */
+.editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.editor-head h1 {
+  margin-bottom: 2px;
+}
+
+.day-edit {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+}
+
+.editor-list {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.editor-row-main {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.editor-name {
+  font-weight: 700;
+  font-size: 0.96rem;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+/* The sets / reps boxes */
+.editor-amounts {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+.editor-num,
+.editor-reps {
+  width: 54px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  text-align: center;
+}
+
+.editor-reps {
+  width: 68px;
+}
+
+.editor-num:focus,
+.editor-reps:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.editor-unit {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 6px;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.editor-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.editor-icon:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.editor-icon.is-remove:hover {
+  border-color: #d2543d;
+  color: #d2543d;
+}
+
+/* ---- Picking an exercise to add ---- */
+.editor-picker {
+  margin-top: 10px;
+}
+
+.editor-choices {
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+
+.editor-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.editor-choice:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.editor-choice:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.editor-choice-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.editor-choice-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.editor-choice-meta {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-faint);
+}
+
+.editor-choice-add {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.editor-choice:disabled .editor-choice-add {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+/* The save / cancel bar sticks to the bottom while you scroll a long list. */
+.editor-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--bg) 22%);
+}
+
+.editor-footer .btn {
   flex: 1 1 0;
 }
 

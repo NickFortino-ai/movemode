@@ -184,6 +184,14 @@ MM.settingsView = (function () {
       if (input) {
         MM.goalTracker.setTarget(input.dataset.goalTarget, input.value);
         ui.toast('Target updated.');
+        return;
+      }
+
+      // Changing when you want to hit a goal by.
+      var dateInput = event.target.closest('[data-goal-deadline]');
+      if (dateInput) {
+        MM.goalTracker.setDeadline(dateInput.dataset.goalDeadline, dateInput.value || null);
+        ui.toast(dateInput.value ? 'Deadline updated.' : 'Deadline removed.');
       }
     });
 
@@ -219,7 +227,7 @@ MM.settingsView = (function () {
           d.profile.goals = turningOff
             ? d.profile.goals.filter(function (id) { return id !== goalId; })
             : d.profile.goals.concat([goalId]);
-          d.plan = MM.planBuilder.build(d.profile, d.mode);
+          d.plan = MM.planBuilder.build(d.profile, d.mode, d.customDays);
           d.onboarded = true;
           // save() adds or removes the matching progress-bar goal.
         });

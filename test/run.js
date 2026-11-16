@@ -498,6 +498,472 @@ function signedIn(dataJson, profile) {
   }
 
   // =========================================================================
+  group('goal deadlines: set them, and change your mind later');
+  {
+    const d = await boot(signedIn(craft({})));
+    const W = d.window;
+    const q = (s) => W.document.querySelector(s);
+    const T = W.MM.goalTracker;
+
+    // --- Setting one when the goal is created ---
+    q('#btn-add-goal').click();
+    ok('the form asks when by', !!q('#goal-timeframe'));
+    check('timeframe choices offered',
+          W.document.querySelectorAll('#goal-timeframe option').length,
+          W.MM.GOAL_TIMEFRAMES.length);
+    ok('"no deadline" is an option — goals do not have to have one',
+       W.MM.GOAL_TIMEFRAMES.some((f) => f.days === null));
+    ok('the custom date box is hidden until asked for',
+       q('#goal-custom-date-field').style.display === 'none');
+
+    q('#goal-timeframe').value = 'custom';
+    q('#goal-timeframe').dispatchEvent(new W.Event('change', { bubbles: true }));
+    ok('picking a date reveals the date box',
+       q('#goal-custom-date-field').style.display !== 'none');
+
+    q('#goal-timeframe').value = '1m';
+    q('#goal-name').value = 'Bench press';
+    q('#goal-metric').value = 'manual';
+    q('#goal-metric').dispatchEvent(new W.Event('change', { bubbles: true }));
+    q('#goal-start').value = '155';
+    q('#goal-target').value = '185';
+    q('#goal-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+
+    const bench = W.MM.store.get().trackedGoals.find((g) => g.name === 'Bench press');
+    ok('the goal was created', !!bench);
+    check('a deadline 30 days out was worked out',
+          bench.deadline, W.MM.dates.addDays(TODAY, 30));
+
+    // --- The countdown ---
+    const due = T.deadlineInfo(bench);
+    check('days left计算ed', due.daysLeft, 30);
+    ok('shown in weeks once it is far off', /weeks left/.test(due.label));
+    ok('not overdue', !due.overdue);
+    ok('the countdown shows on the goal', q('#home-goals .goal-due') !== null);
+
+    // Wording across the range.
+    const label = (date) => T.deadlineInfo({ deadline: date }).label;
+    check('today reads as due today', label(TODAY), 'Due today');
+    check('tomorrow reads as one day', label(W.MM.dates.addDays(TODAY, 1)), '1 day left');
+    check('a few days reads in days', label(W.MM.dates.addDays(TODAY, 5)), '5 days left');
+    check('yesterday reads as past', label(W.MM.dates.addDays(TODAY, -1)), '1 day past');
+    ok('overdue is flagged', T.deadlineInfo({ deadline: daysAgo(3) }).overdue);
+    check('no deadline means no countdown', T.deadlineInfo({ deadline: null }), null);
+
+    // --- Changing it afterwards, because nobody guesses right first time ---
+    q('[data-update-goal]').click();
+    ok('the update form has a deadline box', !!q('#progress-deadline'));
+    check('pre-filled with the current deadline', q('#progress-deadline').value, bench.deadline);
+
+    const later = W.MM.dates.addDays(TODAY, 90);
+    q('#progress-deadline').value = later;
+    q('#progress-value').value = '165';
+    q('#progress-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+    check('the deadline was moved', T.find(bench.id).deadline, later);
+    check('and the progress saved at the same time', T.find(bench.id).current, 165);
+
+    // Clearing the box drops the deadline entirely.
+    q('[data-update-goal]').click();
+    q('#progress-deadline').value = '';
+    q('#progress-form').dispatchEvent(new W.Event('submit', { bubbles: true, cancelable: true }));
+    await sleep(60);
+    check('an empty box removes the deadline', T.find(bench.id).deadline, null);
+
+    // It is editable from Settings too.
+    T.setDeadline(bench.id, later);
+    q('.nav-btn[data-view="settings"]').click();
+    check('settings has a date box for every goal',
+          W.document.querySelectorAll('[data-goal-deadline]').length,
+          W.MM.store.get().trackedGoals.length);
+    const dateBox = q('[data-goal-deadline="' + bench.id + '"]');
+    ok('including this one', !!dateBox);
+    check('showing the current deadline', dateBox.value, later);
+    dateBox.value = W.MM.dates.addDays(TODAY, 14);
+    dateBox.dispatchEvent(new W.Event('change', { bubbles: true }));
+    await sleep(60);
+    check('editing it there saves too',
+          T.find(bench.id).deadline, W.MM.dates.addDays(TODAY, 14));
+    d.window.close();
+  }
+
+  // =========================================================================
+  group('progress graphs');
+  {
+    const d = await boot(signedIn(craft({
+      // Four weeks of activity, so the weekly graphs have real shape.
+      activities: [0, 1, 3, 8, 9, 15, 16, 17, 22].map((n, i) => ({
+        id: 'g' + i, date: daysAgo(n), type: 'Walk', minutes: 20 + i,
+        source: 'manual', notes: '' })),
+    })));
+    const W = d.window;
+    const q = (s) => W.document.querySelector(s);
+    const T = W.MM.goalTracker;
+
+    // --- An automatic weekly goal builds its history from the log ---
+    const autoGoal = W.MM.store.get().trackedGoals[0];     // 'general' -> activeDays
+    const autoSeries = T.series(autoGoal);
+    check('eight weeks of points', autoSeries.length, 8);
+    ok('oldest first', autoSeries[0].date < autoSeries[7].date);
+    ok('every point has a date and a number',
+       autoSeries.every((p) => /^\d{4}-\d{2}-\d{2}$/.test(p.date) && typeof p.value === 'number'));
+    ok('this week matches what the bar says',
+       autoSeries[7].value === T.progress(autoGoal).current);
+
+    // --- A manual goal records each update as a point ---
+    T.add({ name: 'Mile time', metric: 'manual', target: 7, unit: 'min', start: 9 });
+    const mile = W.MM.store.get().trackedGoals.find((g) => g.name === 'Mile time');
+    check('it starts with just the starting point', T.series(mile).length, 1);
+    check('and that point is where they began', T.series(mile)[0].value, 9);
+
+    // The graph wants one point per day, so updating twice today replaces
+    // rather than stacking up.
+    T.recordProgress(mile.id, { current: 8.5 });
+    await sleep(40);
+    check('updating today does not add a second point for today',
+          T.series(T.find(mile.id)).length, 1);
+    check('it just moves today to the new value',
+          T.series(T.find(mile.id))[0].value, 8.5);
+
+    T.recordProgress(mile.id, { current: 8.2 });
+    await sleep(40);
+    check('and again keeps one point', T.series(T.find(mile.id)).length, 1);
+    check('with the newest value', T.series(T.find(mile.id))[0].value, 8.2);
+
+    // Updates on different days each get their own point.
+    W.MM.store.update((dd) => {
+      const g = dd.trackedGoals.find((x) => x.id === mile.id);
+      g.history.unshift({ date: daysAgo(6), value: 9.4 });
+      g.history.splice(1, 0, { date: daysAgo(3), value: 9 });
+    });
+    await sleep(40);
+    const series = T.series(T.find(mile.id));
+    check('three days means three points', series.length, 3);
+    check('oldest first', series.map((p) => p.value), [9.4, 9, 8.2]);
+
+    // --- The graph itself ---
+    const svg = W.MM.chart.line(T.series(T.find(mile.id)), { target: 7, unit: 'min' });
+    ok('an svg is produced', /^<svg/.test(svg));
+    ok('it draws a line', svg.includes('class="chart-line"'));
+    ok('it shades underneath', svg.includes('class="chart-area"'));
+    ok('it marks the target', svg.includes('class="chart-target"'));
+    ok('it dots each point', (svg.match(/class="chart-dot/g) || []).length >= 2);
+    ok('it is labelled for screen readers', /aria-label="Progress graph/.test(svg));
+    ok('it names the dates on the axis', svg.includes('class="chart-axis"'));
+
+    // One point is not a line.
+    ok('a single point says so instead of drawing nonsense',
+       W.MM.chart.line([{ date: TODAY, value: 1 }], {}).includes('Not enough yet'));
+    ok('no points at all is handled', !!W.MM.chart.line([], {}));
+
+    // A flat line must not divide by zero.
+    const flat = W.MM.chart.line(
+      [{ date: daysAgo(2), value: 5 }, { date: TODAY, value: 5 }], { target: 5 });
+    ok('a flat line still draws', /^<svg/.test(flat));
+    ok('with no NaN in the path', !/NaN/.test(flat));
+
+    // --- Graphs live on each goal's own page, not in the list ---
+    q('.nav-btn[data-view="goals"]').click();
+    await sleep(60);
+    check('the list shows goals as links',
+          W.document.querySelectorAll('#goals-content [data-open-goal]').length,
+          W.MM.store.get().trackedGoals.length);
+    ok('no graphs crowding the list', !q('#goals-content .chart'));
+
+    // Home stays uncluttered — bars only, no graphs.
+    q('.nav-btn[data-view="home"]').click();
+    await sleep(60);
+    ok('home keeps just the bars', !q('#home-goals .chart'));
+    ok('but still shows the bars', !!q('#home-goals .goal-item'));
+    d.window.close();
+  }
+
+  // =========================================================================
+  group("each goal's own page");
+  {
+    const d = await boot(signedIn(craft({
+      profile: { goals: ['muscle', 'lose_weight'], goal: 'muscle', experience: 'some',
+                 daysPerWeek: 4, equipment: 'gym', sport: '' },
+      activities: [0, 1, 3, 8].map((n, i) => ({
+        id: 'p' + i, date: daysAgo(n), type: 'Lifting', minutes: 40,
+        source: 'manual', notes: '' })),
+    })));
+    const W = d.window;
+    const q = (s) => W.document.querySelector(s);
+    W.MM.store.update((dd) => { dd.plan = W.MM.planBuilder.build(dd.profile, dd.mode); });
+    await sleep(80);
+
+    // --- Open a category goal from the list ---
+    q('.nav-btn[data-view="goals"]').click();
+    await sleep(40);
+    const firstGoal = q('#goals-content [data-open-goal]');
+    const goalId = firstGoal.dataset.openGoal;
+    firstGoal.click();
+    await sleep(60);
+
+    check('still on the My Goals tab', q('.view.is-active').id, 'view-goals');
+    const page = () => q('#goals-content').textContent;
+    check('the heading becomes the goal name',
+          q('#goals-heading').textContent, W.MM.goalTracker.find(goalId).name);
+    ok('there is a way back', !!q('#goal-back'));
+
+    // The three things asked for: progress, the graph, relevant info.
+    ok('the progress bar is here', !!q('#goals-content .progress-track'));
+    ok('the big figure is here', !!q('.goal-big-figure'));
+    ok('the graph is here', !!q('#goals-content .chart'));
+    ok('it says what the graph shows', page().includes('Progress over time'));
+    ok('the plan for this goal is here', page().includes('Your plan for this'));
+    ok('with real day cards', !!q('#goals-content .day-card'));
+    ok('eating for this goal is here', page().includes('Eating for this goal'));
+    ok('and the safety note travels with the food advice',
+       page().includes('parent, coach'));
+
+    // Only the days that actually serve this goal.
+    const category = W.MM.getGoal(W.MM.goalTracker.find(goalId).category);
+    const shownTypes = [...W.document.querySelectorAll('#goals-content .day-card')]
+      .map((el) => el.querySelector('.day-title').textContent);
+    ok('the days shown belong to this goal',
+       shownTypes.every((title) =>
+         category.rotation.some((t) => W.MM.DAY_TYPES[t].title === title)));
+
+    // --- Back to the list ---
+    q('#goal-back').click();
+    await sleep(60);
+    ok('back shows the list again', !!q('#goals-content [data-open-goal]'));
+    ok('and the heading resets', q('#goals-heading').textContent === W.MM.copy('goalsPageTitle'));
+
+    // --- A goal you wrote yourself gets a different page ---
+    W.MM.goalTracker.add({ name: 'Bench press', metric: 'manual', target: 185,
+                           unit: 'lbs', start: 155 });
+    await sleep(60);
+    const custom = W.MM.store.get().trackedGoals.find((g) => g.name === 'Bench press');
+    W.MM.goalTracker.recordProgress(custom.id, { current: 165 });
+    // Backdate a couple of points so there is a real history to list — one
+    // update on one day is not a history.
+    W.MM.store.update((dd) => {
+      const g = dd.trackedGoals.find((x) => x.id === custom.id);
+      g.history.unshift({ date: daysAgo(10), value: 155 });
+      g.history.splice(1, 0, { date: daysAgo(4), value: 160 });
+    });
+    await sleep(60);
+
+    W.MM.myGoalsView.openGoal(custom.id);
+    await sleep(60);
+    ok('it has an update button', !!q('#goals-content [data-update-goal]'));
+    ok('it lists every update', page().includes('Every update'));
+    check('one history row per point',
+          W.document.querySelectorAll('.history-row').length,
+          W.MM.goalTracker.series(custom).length);
+    ok('it shows the change between updates', !!q('.history-change'));
+    ok('no automatic plan is claimed for it',
+       page().includes('goal you wrote yourself'));
+    ok('it points at Quick Workout instead', !!q('#goal-to-quick'));
+
+    // --- Tapping a goal on Home jumps to its page ---
+    q('.nav-btn[data-view="home"]').click();
+    await sleep(40);
+    q('#home-goals .goal-item').click();
+    await sleep(60);
+    check('home takes you to the goal page', q('.view.is-active').id, 'view-goals');
+    ok('showing one goal, not the list', !!q('#goal-back'));
+
+    // But the Update button on Home must still just update.
+    q('.nav-btn[data-view="goals"]').click();   // resets to the list
+    await sleep(40);
+    ok('the tab resets to the list', !q('#goal-back'));
+
+    // --- A deleted goal must not leave you on a blank page ---
+    W.MM.myGoalsView.openGoal(custom.id);
+    await sleep(40);
+    W.MM.goalTracker.remove(custom.id);
+    await sleep(60);
+    ok('deleting the open goal falls back to the list',
+       !q('#goal-back') && !!q('#goals-content [data-open-goal]'));
+    d.window.close();
+  }
+
+  // =========================================================================
+  group('workouts are editable');
+  {
+    const d = await boot(signedIn(craft({
+      profile: { goals: ['muscle'], goal: 'muscle', experience: 'some',
+                 daysPerWeek: 7, equipment: 'gym', sport: '' },
+    })));
+    const W = d.window;
+    const q = (s) => W.document.querySelector(s);
+    const qq = (s) => [...W.document.querySelectorAll(s)];
+    W.MM.store.update((dd) => { dd.plan = W.MM.planBuilder.build(dd.profile, dd.mode, dd.customDays); });
+    await sleep(80);
+
+    q('.nav-btn[data-view="goals"]').click();
+    await sleep(40);
+
+    // --- Option 1: leave the generated workout alone ---
+    check('every day offers an edit', qq('#goals-content [data-edit-day]').length, 7);
+    check('nothing is custom to begin with',
+          Object.keys(W.MM.store.get().customDays).length, 0);
+
+    // --- Option 2: edit the generated template ---
+    const mondayBefore = JSON.parse(JSON.stringify(W.MM.store.get().plan.days[0]));
+    q('[data-edit-day="0"]').click();
+    await sleep(60);
+    ok('the editor opens', W.MM.workoutEditor.isOpen());
+    check('it names the day', q('#editor-title').textContent, 'Monday');
+    check('it lists the exercises',
+          qq('#editor-body .editor-row').length, mondayBefore.blocks.length);
+
+    // Rename it, change the sets, remove one, reorder.
+    q('#editor-name').value = 'My Monday';
+    q('#editor-name').dispatchEvent(new W.Event('input', { bubbles: true }));
+    const setsBox = q('[data-field="sets"]');
+    setsBox.value = '7';
+    setsBox.dispatchEvent(new W.Event('input', { bubbles: true }));
+
+    const secondName = qq('#editor-body .editor-name')[1].textContent;
+    q('[data-move="up"][data-index="1"]').click();
+    await sleep(40);
+    check('moving an exercise up reorders it',
+          q('#editor-body .editor-name').textContent, secondName);
+
+    const countBefore = qq('#editor-body .editor-row').length;
+    q('[data-remove="0"]').click();
+    await sleep(40);
+    check('removing one takes it out', qq('#editor-body .editor-row').length, countBefore - 1);
+
+    // Add one from the picker.
+    q('#editor-add').click();
+    await sleep(40);
+    ok('the exercise picker opens', !!q('.editor-picker'));
+    check('a button per muscle group',
+          qq('#editor-groups .muscle-card').length, W.MM.MUSCLE_GROUPS.length);
+    q('[data-pick-group="core"]').click();
+    await sleep(40);
+    const choice = q('[data-add-exercise]:not([disabled])');
+    const addedId = choice.dataset.addExercise;
+    choice.click();
+    await sleep(40);
+    check('adding one puts it in the workout',
+          qq('#editor-body .editor-row').length, countBefore);
+
+    q('#editor-save').click();
+    await sleep(80);
+
+    ok('the editor closes on save', !W.MM.workoutEditor.isOpen());
+    const monday = W.MM.store.get().plan.days[0];
+    check('the new name stuck', monday.title, 'My Monday');
+    check('it is marked as yours', monday.custom, true);
+    check('the sets change stuck', monday.blocks[0].sets, 7);
+    ok('the added exercise is in there',
+       monday.blocks.some((b) => b.exerciseId === addedId));
+    check('and it was saved outside the plan so it survives rebuilds',
+          Object.keys(W.MM.store.get().customDays), ['0']);
+    ok('the card shows it as yours',
+       q('#goals-content .day-card').textContent.includes('yours'));
+
+    // --- THE IMPORTANT BIT: edits must survive the plan being rebuilt ---
+    q('#plan-shuffle').click();
+    await sleep(80);
+    check('shuffling exercises does not touch your day',
+          W.MM.store.get().plan.days[0].title, 'My Monday');
+
+    q('.mode-opt[data-mode="grind"]').click();
+    await sleep(80);
+    check('switching mode does not touch your day',
+          W.MM.store.get().plan.days[0].title, 'My Monday');
+    check('your sets survived the mode change',
+          W.MM.store.get().plan.days[0].blocks[0].sets, 7);
+    ok('but the other days did get re-tuned',
+       W.MM.store.get().plan.days.some((day) => day.kind === 'workout' && !day.custom));
+
+    q('.nav-btn[data-view="settings"]').click();
+    q('#settings-goals [data-toggle-goal="speed"]').click();
+    await sleep(80);
+    check('changing goals does not touch your day',
+          W.MM.store.get().plan.days[0].title, 'My Monday');
+
+    // --- Option 3: build one from scratch on a rest day ---
+    W.MM.store.update((dd) => {
+      dd.profile.daysPerWeek = 3;
+      dd.plan = W.MM.planBuilder.build(dd.profile, dd.mode, dd.customDays);
+    });
+    await sleep(80);
+    q('.nav-btn[data-view="goals"]').click();
+    await sleep(40);
+
+    const restIndex = W.MM.store.get().plan.days
+      .findIndex((day) => day.kind === 'rest');
+    ok('there is a rest day to build on', restIndex > -1);
+    ok('rest days offer to take a workout',
+       !!q('[data-edit-day="' + restIndex + '"]'));
+
+    q('[data-edit-day="' + restIndex + '"]').click();
+    await sleep(40);
+    ok('the editor offers to add a workout', !!q('#editor-make-workout'));
+    q('#editor-make-workout').click();
+    await sleep(40);
+    ok('and opens the picker ready to go', !!q('.editor-picker'));
+
+    // Saving an empty workout is refused.
+    q('#editor-save').click();
+    await sleep(40);
+    ok('an empty workout is not saved', W.MM.workoutEditor.isOpen());
+
+    q('[data-pick-group="legs"]').click();
+    await sleep(40);
+    q('[data-add-exercise]:not([disabled])').click();
+    await sleep(40);
+    q('#editor-name').value = 'Saturday session';
+    q('#editor-name').dispatchEvent(new W.Event('input', { bubbles: true }));
+    q('#editor-save').click();
+    await sleep(80);
+
+    const built = W.MM.store.get().plan.days[restIndex];
+    check('the rest day became a workout', built.kind, 'workout');
+    check('with the name given', built.title, 'Saturday session');
+    check('and the exercise chosen', built.blocks.length, 1);
+
+    // --- Going back to the generated version ---
+    W.confirm = () => true;
+    q('[data-edit-day="0"]').click();
+    await sleep(40);
+    ok('an edited day offers a reset', !!q('#editor-reset'));
+    q('#editor-reset').click();
+    await sleep(80);
+    ok('resetting drops the custom day',
+       Object.keys(W.MM.store.get().customDays).indexOf('0') === -1);
+    ok('and the generated workout comes back',
+       W.MM.store.get().plan.days[0].title !== 'My Monday');
+    ok('the other custom day is untouched',
+       W.MM.store.get().plan.days[restIndex].title === 'Saturday session');
+
+    // --- Cancel really does change nothing ---
+    const before = JSON.stringify(W.MM.store.get().plan.days[restIndex]);
+    q('[data-edit-day="' + restIndex + '"]').click();
+    await sleep(40);
+    q('#editor-name').value = 'Should not be saved';
+    q('[data-remove="0"]').click();
+    await sleep(40);
+    q('#editor-cancel').click();
+    await sleep(60);
+    check('cancelling leaves the day exactly as it was',
+          JSON.stringify(W.MM.store.get().plan.days[restIndex]), before);
+
+    // --- A custom day survives a reload ---
+    const saved = {};
+    for (let i = 0; i < W.localStorage.length; i++) {
+      const k = W.localStorage.key(i);
+      saved[k] = W.localStorage.getItem(k);
+    }
+    d.window.close();
+
+    const d2 = await boot(saved);
+    check('your workout is still there after a reload',
+          d2.window.MM.store.get().plan.days[restIndex].title, 'Saturday session');
+    d2.window.close();
+  }
+
+  // =========================================================================
   group('profile icons suit a movement site');
   {
     const d = await boot(signedIn(craft({})));
@@ -553,7 +1019,7 @@ function signedIn(dataJson, profile) {
 
     const sheet = [...doc.styleSheets]
       .find((s) => (s.href || '').endsWith('components.css'));
-    const displayOf = (selector) => {
+    const declaredDisplay = (selector) => {
       const rule = [...sheet.cssRules].find((r) => r.selectorText === selector);
       return rule ? rule.style.display : '(no rule)';
     };
@@ -564,8 +1030,8 @@ function signedIn(dataJson, profile) {
       ['.day-title', '.day-sub'],           // plan day cards
       ['.why-fact', '.why-because'],        // the movement fact banner
     ].forEach(function (pair) {
-      check(pair[0] + ' stacks', displayOf(pair[0]), 'block');
-      check(pair[1] + ' stacks', displayOf(pair[1]), 'block');
+      check(pair[0] + " stacks", declaredDisplay(pair[0]), "block");
+      check(pair[1] + " stacks", declaredDisplay(pair[1]), "block");
     });
 
     // And the markup really does put them back to back with no gap, which is
@@ -576,6 +1042,92 @@ function signedIn(dataJson, profile) {
       ok('nothing separates the label and blurb in the HTML',
          label.nextSibling === onboardCard.querySelector('.option-blurb'));
     }
+
+    /* ------------------------------------------------------------------
+       A sweep of every screen for the same bug anywhere else.
+
+       It walks the rendered page looking for two inline elements sitting
+       next to each other with no whitespace between them in the HTML —
+       which is exactly how "Build muscle" ended up glued to "Get bigger
+       and stronger". A flex or grid parent is fine, because that forces
+       its children onto their own lines.
+       ------------------------------------------------------------------ */
+    const rules = [];
+    [...doc.styleSheets]
+      .filter((s) => (s.href || '').startsWith('https://movemode.local/css/'))
+      .forEach((sh) => [...sh.cssRules].forEach((r) => {
+        if (r.selectorText && r.style && r.style.display) {
+          r.selectorText.split(',').forEach((sel) =>
+            rules.push({ sel: sel.trim(), display: r.style.display }));
+        }
+      }));
+
+    const BLOCKISH = ['block', 'flex', 'grid', 'list-item', 'table'];
+    const CONTAINER = ['flex', 'grid', 'inline-flex', 'inline-grid'];
+    const NATURALLY_BLOCK = ['DIV', 'P', 'H1', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI',
+                             'SECTION', 'HEADER', 'NAV', 'FORM', 'MAIN', 'ARTICLE'];
+
+    function displayOf(el) {
+      let found = null;
+      rules.forEach((r) => { try { if (el.matches(r.sel)) found = r.display; } catch (e) {} });
+      if (found) return found;
+      if (el.tagName === 'BUTTON') return 'inline-block';
+      return NATURALLY_BLOCK.includes(el.tagName) ? 'block' : 'inline';
+    }
+
+    const smashed = [];
+    const nameOf = (el) => el.getAttribute('class') || el.tagName;
+
+    function sweep(root, where) {
+      if (!root) return;
+      [...root.querySelectorAll('*')].forEach((parent) => {
+        if (CONTAINER.includes(displayOf(parent))) return;
+        // <option>s inside a <select> are drawn as a dropdown, not inline text.
+        if (parent.tagName === 'SELECT') return;
+        // Inside an <svg>, elements are placed by x/y coordinates rather than
+        // flowing as text, so they cannot run into each other.
+        if (parent.closest('svg')) return;
+
+        const kids = [...parent.children];
+        for (let i = 0; i < kids.length - 1; i++) {
+          const a = kids[i], b = kids[i + 1];
+          let between = '', n = a.nextSibling;
+          while (n && n !== b) { between += n.textContent || ''; n = n.nextSibling; }
+          if (/\s/.test(between)) continue;
+          if (BLOCKISH.includes(displayOf(a)) || BLOCKISH.includes(displayOf(b))) continue;
+          if (!a.textContent.trim() || !b.textContent.trim()) continue;
+          smashed.push(where + ': .' + nameOf(a) + ' + .' + nameOf(b));
+        }
+      });
+    }
+
+    // Fill the app with real content so every screen has something to check.
+    d.window.MM.store.update((dd) => {
+      dd.profile.goals = ['muscle', 'lose_weight'];
+      dd.plan = d.window.MM.planBuilder.build(dd.profile, dd.mode);
+      dd.activities.push({ id: 'sw', date: TODAY, type: 'Walked the dog',
+                           minutes: 30, source: 'manual', notes: 'felt good' });
+      dd.meals.push({ id: 'sm', date: TODAY, slot: 'Lunch', name: 'Sandwich', notes: '' });
+    });
+    await sleep(80);
+
+    for (const screen of ['home', 'goals', 'quick', 'log', 'settings', 'profile']) {
+      d.window.MM.app.showView(screen);
+      await sleep(40);
+      sweep(doc.querySelector('#view-' + screen), screen);
+    }
+
+    d.window.MM.onboarding.open();
+    await sleep(40);
+    sweep(doc.querySelector('#onboarding'), 'onboarding');
+    d.window.MM.onboarding.close();
+
+    d.window.MM.logView.openActivityForm();
+    await sleep(40);
+    sweep(doc.querySelector('#entry-modal'), 'log form');
+
+    check('no smashed-together text anywhere in the app',
+          [...new Set(smashed)], []);
     d.window.close();
   }
 

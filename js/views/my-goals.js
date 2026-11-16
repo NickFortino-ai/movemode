@@ -76,8 +76,38 @@ MM.myGoalsView = (function () {
 
   /* --------------------------------------------------------------------------
      RENDER
+
+     This screen has two states: the list of everything, and the detail page
+     for one goal. `openGoalId` decides which. It is kept here rather than in
+     the URL because the whole app is one page with no router — tapping the
+     My Goals tab always takes you back to the list.
      -------------------------------------------------------------------------- */
+  var openGoalId = null;
+
+  function openGoal(goalId) {
+    openGoalId = goalId;
+    render();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function backToList() {
+    openGoalId = null;
+    render();
+  }
+
   function render() {
+    // A goal can disappear underneath us (deleted, or its category turned
+    // off), so fall back to the list rather than showing a blank page.
+    if (openGoalId && !MM.goalTracker.find(openGoalId)) openGoalId = null;
+
+    if (openGoalId) {
+      renderGoalDetail(MM.goalTracker.find(openGoalId));
+      return;
+    }
+    renderList();
+  }
+
+  function renderList() {
     var data = MM.store.get();
     var host = ui.$('#goals-content');
 
@@ -111,12 +141,21 @@ MM.myGoalsView = (function () {
       nutritionHTML(data);
   }
 
-  /* ---- The goals themselves, with their progress bars -------------------- */
+  /* ---- The goals themselves, each one tappable --------------------------- */
   function goalProgressHTML() {
     var goals = MM.goalTracker.all();
 
+    // Each goal is a button leading to its own page. The graph and the
+    // detail live there rather than crowding this list.
     var bars = goals.length
-      ? '<div class="goal-list">' + goals.map(MM.goalProgress.goalRowHTML).join('') + '</div>'
+      ? '<div class="goal-list">' +
+          goals.map(function (p) {
+            return '<button type="button" class="goal-open" data-open-goal="' +
+              ui.esc(p.goal.id) + '">' +
+              MM.goalProgress.goalRowHTML(p, { asLink: true }) +
+            '</button>';
+          }).join('') +
+        '</div>'
       : '<div class="empty-state">No goals yet.</div>';
 
     return '' +
@@ -125,6 +164,172 @@ MM.myGoalsView = (function () {
         '<button type="button" class="btn btn-ghost" id="goals-add">+ Add goal</button>' +
       '</div>' +
       bars;
+  }
+
+  /* ==========================================================================
+     ONE GOAL'S OWN PAGE
+     Reached by tapping a goal in the list. Shows that goal's progress, its
+     graph, the part of the plan that serves it, and how to eat for it.
+     ======================================================================== */
+  function renderGoalDetail(goal) {
+    var data = MM.store.get();
+    var p = MM.goalTracker.progress(goal);
+    var due = MM.goalTracker.deadlineInfo(goal);
+    var category = goal.category ? MM.getGoal(goal.category) : null;
+
+    ui.$('#goals-heading').textContent = goal.name;
+    ui.$('#goals-intro').textContent = category
+      ? category.blurb
+      : 'A goal you set yourself.';
+
+    ui.$('#goals-content').innerHTML = '' +
+      '<button type="button" class="btn btn-ghost back-link" id="goal-back">' +
+        '← All goals' +
+      '</button>' +
+
+      // ---- Where this goal stands ----
+      '<div class="card">' +
+        '<div class="chip-row mb-1">' +
+          '<span class="chip chip-accent">' +
+            (category ? ui.esc(category.icon) + ' ' + ui.esc(category.label) : '🎯 Your own goal') +
+          '</span>' +
+          '<span class="chip">' + ui.esc(p.metric.label) + '</span>' +
+          (due
+            ? '<span class="chip' + (due.overdue && !p.done ? '' : ' chip-accent') + '">' +
+                ui.esc(due.label) + ' · ' + ui.esc(due.dateLabel) + '</span>'
+            : '<span class="chip">No deadline</span>') +
+        '</div>' +
+
+        '<div class="goal-big-figure">' + ui.esc(p.summary) + '</div>' +
+        '<div class="progress-track" role="progressbar" aria-valuenow="' + p.percent +
+          '" aria-valuemin="0" aria-valuemax="100">' +
+          '<div class="progress-fill" style="width:' + p.percent + '%"></div>' +
+        '</div>' +
+        '<p class="small faint mt-1">' + p.percent + '% there · started ' +
+          ui.esc(MM.dates.shortLabel(goal.createdAt)) +
+          (p.done ? ' · reached 🎉' : '') + '</p>' +
+
+        (p.metric.auto
+          ? '<p class="small muted mt-1">This one keeps itself up to date from ' +
+              'what you log — there is nothing to fill in.</p>'
+          : '<button type="button" class="btn btn-primary btn-block mt-1" ' +
+              'data-update-goal="' + ui.esc(goal.id) + '">Update my progress</button>') +
+      '</div>' +
+
+      // ---- The graph ----
+      '<div class="section-title"><h2>Progress over time</h2></div>' +
+      '<div class="card">' +
+        '<p class="small faint mb-1">' + ui.esc(chartCaption(p)) + '</p>' +
+        MM.chart.line(MM.goalTracker.series(goal), { target: p.target, unit: p.unit }) +
+      '</div>' +
+
+      historyHTML(goal, p) +
+      goalPlanHTML(data, category) +
+      goalNutritionHTML(category);
+  }
+
+  function chartCaption(p) {
+    if (!p.metric.auto) return 'Every update you have logged, against your target.';
+    if (p.goal.metric === 'streak') return 'Your streak over the last 30 days.';
+    return p.metric.label + ', week by week, against your target.';
+  }
+
+  /* ---- Every update, listed, for a goal you update yourself -------------- */
+  function historyHTML(goal, p) {
+    if (p.metric.auto) return '';
+
+    var points = MM.goalTracker.series(goal).slice().reverse();   // newest first
+    if (points.length <= 1) return '';
+
+    return '' +
+      '<div class="section-title"><h2>Every update</h2></div>' +
+      '<div class="card">' +
+        points.map(function (point, i) {
+          var previous = points[i + 1];
+          var change = previous ? point.value - previous.value : null;
+          var changeText = '';
+
+          if (change !== null && change !== 0) {
+            changeText = '<span class="history-change">' +
+              (change > 0 ? '+' : '') + Math.round(change * 10) / 10 + '</span>';
+          }
+
+          return '' +
+            '<div class="history-row">' +
+              '<span class="history-date">' +
+                ui.esc(MM.dates.friendlyLabel(point.date)) + '</span>' +
+              '<span class="history-value">' +
+                ui.esc(point.value + (goal.unit ? ' ' + goal.unit : '')) + '</span>' +
+              changeText +
+            '</div>';
+        }).join('') +
+      '</div>';
+  }
+
+  /* ---- The days of the plan that serve this particular goal -------------- */
+  function goalPlanHTML(data, category) {
+    if (!category) {
+      return '' +
+        '<div class="section-title"><h2>Working toward it</h2></div>' +
+        '<div class="card card-dim">' +
+          '<p class="small muted">This is a goal you wrote yourself, so there ' +
+            'is no automatic plan for it. Your weekly plan is built from your ' +
+            'goal categories — and Quick Workout is good for picking something ' +
+            'that targets it directly.</p>' +
+          '<button type="button" class="btn btn-outline btn-block mt-1" id="goal-to-quick">' +
+            'Open Quick Workout' +
+          '</button>' +
+        '</div>';
+    }
+
+    if (!data.plan) return '';
+
+    // Which day types come from this goal's rotation?
+    var rotation = category.rotation;
+    var days = data.plan.days.filter(function (day) {
+      return day.kind === 'workout' && rotation.indexOf(day.dayType) !== -1;
+    });
+
+    if (days.length === 0) {
+      return '' +
+        '<div class="section-title"><h2>Your plan for this</h2></div>' +
+        '<div class="card card-dim">' +
+          '<p class="small muted">Your week is currently built around your other ' +
+            'goals. Make this one your main goal in Settings to give it more days.</p>' +
+        '</div>';
+    }
+
+    return '' +
+      '<div class="section-title">' +
+        '<h2>Your plan for this</h2>' +
+        '<span class="section-hint">' + days.length +
+          (days.length === 1 ? ' day' : ' days') + ' a week</span>' +
+      '</div>' +
+      '<div class="day-grid">' +
+        days.map(function (day) {
+          return workoutDayHTML(day, false, false, null);
+        }).join('') +
+      '</div>';
+  }
+
+  /* ---- How to eat for this particular goal ------------------------------- */
+  function goalNutritionHTML(category) {
+    if (!category) return '';
+
+    var guide = MM.nutritionForGoal(category.id);
+
+    return '' +
+      '<div class="section-title"><h2>Eating for this goal</h2></div>' +
+      '<div class="card">' +
+        '<h3 class="card-title">' + ui.esc(guide.headline) + '</h3>' +
+        '<p class="small">' + ui.esc(guide.summary) + '</p>' +
+        '<ul class="habit-list mt-1">' +
+          guide.priorities.map(function (item) {
+            return '<li>' + ui.esc(item) + '</li>';
+          }).join('') +
+        '</ul>' +
+      '</div>' +
+      ui.disclaimerHTML();
   }
 
   /* ---- The chips at the top describing the plan -------------------------- */
@@ -178,19 +383,21 @@ MM.myGoalsView = (function () {
       var isToday = index === todayIndex;
       var isDone = data.planCompletions[dateKey] === day.id;
 
+      // The index is passed through so each card knows which day it can edit.
       return day.kind === 'rest'
-        ? restDayHTML(day, isToday)
-        : workoutDayHTML(day, isToday, isDone, dateKey);
+        ? restDayHTML(day, isToday, index)
+        : workoutDayHTML(day, isToday, isDone, dateKey, index);
     }).join('');
 
     // .day-grid becomes two columns on a desktop (css/desktop.css).
     return '<div class="section-title"><h2>' + ui.esc(MM.copy('goalsPlanHeading')) + '</h2>' +
       '<span class="section-hint">Mon – Sun</span></div>' +
-      '<p class="view-intro mb-1">' + ui.esc(MM.copy('planIntro')) + '</p>' +
+      '<p class="view-intro mb-1">' + ui.esc(MM.copy('planIntro')) +
+        ' Every workout here can be changed — tap Edit on any day.</p>' +
       '<div class="day-grid">' + cards + '</div>';
   }
 
-  function restDayHTML(day, isToday) {
+  function restDayHTML(day, isToday, dayIndex) {
     return '' +
       '<div class="day-card is-rest' + (isToday ? ' is-today' : '') + '">' +
         '<div class="day-head" style="cursor:default">' +
@@ -200,12 +407,17 @@ MM.myGoalsView = (function () {
             '<span class="day-sub">' + ui.esc(MM.copy('planRestNote')) + '</span>' +
           '</span>' +
           (isToday ? '<span class="chip chip-accent">' + ui.esc(MM.copy('planTodayLabel')) + '</span>' : '') +
+          // A rest day can become a workout if you want one here.
+          (dayIndex === null || dayIndex === undefined ? '' :
+            '<button type="button" class="btn btn-ghost day-edit" data-edit-day="' +
+              dayIndex + '">+ Add</button>') +
         '</div>' +
       '</div>';
   }
 
-  function workoutDayHTML(day, isToday, isDone, dateKey) {
+  function workoutDayHTML(day, isToday, isDone, dateKey, dayIndex) {
     var minutes = estimateMinutes(day);
+    var isMine = day.custom;
 
     var checkButton = isToday
       ? '<button type="button" class="btn btn-block mt-1 ' +
@@ -215,6 +427,14 @@ MM.myGoalsView = (function () {
         '</button>'
       : '';
 
+    // The edit button is left off the goal detail page, where days are shown
+    // for reference rather than to be worked on.
+    var editButton = (dayIndex === null || dayIndex === undefined) ? '' :
+      '<button type="button" class="btn btn-outline btn-block mt-1" data-edit-day="' +
+        dayIndex + '">' +
+        (isMine ? 'Edit my workout' : 'Edit this workout') +
+      '</button>';
+
     return '' +
       '<div class="day-card' + (isToday ? ' is-today is-open' : '') + '">' +
         '<button type="button" class="day-head" data-toggle-day>' +
@@ -222,17 +442,19 @@ MM.myGoalsView = (function () {
           '<span class="day-info">' +
             '<span class="day-title">' + ui.esc(day.title) + '</span>' +
             '<span class="day-sub">' + day.blocks.length + ' exercises · about ' + minutes + ' min' +
-              (isDone ? ' · done ✓' : '') + '</span>' +
+              (isDone ? ' · done ✓' : '') + (isMine ? ' · yours' : '') + '</span>' +
           '</span>' +
+          (isMine ? '<span class="chip">✎ yours</span>' : '') +
           (isToday ? '<span class="chip chip-accent">' + ui.esc(MM.copy('planTodayLabel')) + '</span>' : '') +
           '<svg class="day-chevron" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-chevron"></use></svg>' +
         '</button>' +
         '<div class="day-body">' +
-          '<p class="day-note">' + ui.esc(day.note) + '</p>' +
+          (day.note ? '<p class="day-note">' + ui.esc(day.note) + '</p>' : '') +
           day.blocks.map(function (block, i) {
             return ui.exerciseRowHTML(block, i);
           }).join('') +
           checkButton +
+          editButton +
         '</div>' +
       '</div>';
   }
@@ -355,6 +577,13 @@ MM.myGoalsView = (function () {
         return;
       }
 
+      // Edit a day's workout, or put one on a rest day.
+      var editBtn = event.target.closest('[data-edit-day]');
+      if (editBtn) {
+        MM.workoutEditor.open(editBtn.dataset.editDay);
+        return;
+      }
+
       // Rebuild the plan with different exercise picks
       if (event.target.closest('#plan-shuffle')) {
         MM.planBuilder.regenerate();
@@ -379,6 +608,23 @@ MM.myGoalsView = (function () {
         return;
       }
 
+      // --- Into and out of a single goal's page ---
+      var openBtn = event.target.closest('[data-open-goal]');
+      if (openBtn) {
+        openGoal(openBtn.dataset.openGoal);
+        return;
+      }
+
+      if (event.target.closest('#goal-back')) {
+        backToList();
+        return;
+      }
+
+      if (event.target.closest('#goal-to-quick')) {
+        MM.app.showView('quick');
+        return;
+      }
+
       var updateBtn = event.target.closest('[data-update-goal]');
       if (updateBtn) {
         MM.goalProgress.openUpdateForm(updateBtn.dataset.updateGoal);
@@ -389,6 +635,8 @@ MM.myGoalsView = (function () {
   return {
     init: init,
     render: render,
+    openGoal: openGoal,
+    backToList: backToList,
     completeToday: completeToday,
     estimateMinutes: estimateMinutes,
   };

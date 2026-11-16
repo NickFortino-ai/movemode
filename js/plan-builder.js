@@ -234,7 +234,7 @@ MM.planBuilder = (function () {
      THE MAIN ENTRY POINT
      MM.planBuilder.build(profile, mode) -> plan object
      -------------------------------------------------------------------------- */
-  function build(profile, mode) {
+  function build(profile, mode, customDays) {
     var activeMode = mode || MM.SITE.defaultMode;
     var tuning = MM.MODE_TUNING[activeMode] || MM.MODE_TUNING.chill;
 
@@ -289,6 +289,18 @@ MM.planBuilder = (function () {
       }
     }
 
+    // Lay the user's own days over the generated ones. Because their edits
+    // are stored separately (data.customDays), regenerating the plan — when
+    // the mode changes, a goal changes, or they shuffle the exercises — can
+    // never throw away a workout they wrote themselves.
+    var overrides = customDays || {};
+    Object.keys(overrides).forEach(function (index) {
+      var i = Number(index);
+      if (i >= 0 && i < 7 && overrides[index]) {
+        days[i] = overrides[index];
+      }
+    });
+
     return {
       createdAt: MM.dates.today(),
       goal: goalIds[0],
@@ -315,7 +327,9 @@ MM.planBuilder = (function () {
      -------------------------------------------------------------------------- */
   function regenerate() {
     MM.store.update(function (d) {
-      d.plan = build(d.profile, d.mode);
+      // customDays must be passed in, or shuffling would quietly wipe out
+      // any workout the user wrote themselves.
+      d.plan = build(d.profile, d.mode, d.customDays);
     });
   }
 

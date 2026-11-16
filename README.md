@@ -119,6 +119,7 @@ movemode/
     ├── plan-builder.js     Turns onboarding answers into a weekly plan.
     ├── quick-workout.js    Builds the short "right now" circuits.
     ├── timer.js            The interval timer.
+    ├── chart.js            The little progress graphs, as hand-drawn SVG.
     │
     ├── data/
     │   ├── exercises.js    ⭐ The exercise library (56 exercises).
@@ -141,6 +142,7 @@ movemode/
         │                     My Goals, and Settings.
         ├── signin.js       The sign-in screen and the new-profile form.
         ├── profile.js      The Profile page: name, icon, PIN, training setup.
+        ├── workout-editor.js  Editing a day's workout, or building your own.
         └── onboarding.js
 ```
 
@@ -149,7 +151,7 @@ movemode/
 | Screen | What it's for |
 |---|---|
 | **Home** | Deliberately the quietest screen. A fact about why movement matters banners the top (tap it for another), then two things: **how you're doing** (streak, one button to log) and **what you're working toward** (goal progress bars). Detail lives elsewhere on purpose. |
-| **My Goals** | Everything tied to your goals in one place: the goals themselves with progress bars, the weekly **exercise plan** built from them, and the **diet plan** that matches. |
+| **My Goals** | Everything tied to your goals in one place: the goals themselves with progress bars, the weekly **exercise plan** built from them (every day editable), and the **diet plan** that matches. Tapping a goal opens its own page with a progress graph, its deadline, the part of the plan that serves it, and how to eat for it. |
 | **Quick Workout** | Pick a muscle group — Chest, Back, Legs, Core… — and get every exercise in the library that trains it, filtered to the equipment you have. Optionally start a timed circuit from the list. |
 | **Log** | Workout and meal history, plus the totals and the 30-day grid. These moved off Home to keep it calm — this is the screen you come to for detail. |
 | **Settings** | Mode, goals and targets, redo the questions, clear data. |
@@ -368,6 +370,37 @@ you're unsure about a claim, either under-claim it or leave it out. There's
 also `MM.MOVEMENT_MIND_NOTE`, shown under any mind fact, pointing people
 toward real help — movement helps mental health, but it isn't a substitute
 for talking to someone, and the site shouldn't imply otherwise.
+
+## Editing workouts
+
+The generated plan is a starting point, not a rule. On **My Goals**, every day
+has an Edit button, and from there you can:
+
+- **keep the generated workout** — do nothing
+- **change it** — rename it, add or remove exercises, reorder them, set your
+  own sets and reps, or turn it into a rest day
+- **build one from scratch** — a rest day offers "+ Add", which gives you an
+  empty workout and the exercise picker
+
+### How edits survive
+
+This is the part worth understanding before you change anything here. A day
+you've touched is saved into **`data.customDays`**, keyed by weekday
+(`0` = Monday) — **not** into the plan itself.
+
+The plan gets rebuilt often: when the mode changes, when a goal changes, when
+you tap Shuffle, when the training setup changes. Every one of those calls
+`MM.planBuilder.build(profile, mode, customDays)`, and the builder lays your
+custom days back over the generated ones at the end. So a rebuild can never
+throw away a workout you wrote.
+
+> If you add a new place that rebuilds the plan, **you must pass
+> `d.customDays` as the third argument.** Forgetting it silently deletes the
+> user's own workouts — that exact bug happened once already with the Shuffle
+> button, and there's now a test for it.
+
+"Reset to generated" just deletes that entry from `customDays`, and the
+generated version comes straight back.
 
 ## How goals and progress bars work
 
