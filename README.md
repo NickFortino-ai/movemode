@@ -86,9 +86,12 @@ just asks it which profile is active. That's in the ideas list at the bottom.
 
 ```
 movemode/
-├── index.html              The whole page: the shell, all 5 screens, the
+├── index.html              The whole page: the shell, all the screens, the
 │                           modals, and the icon sprite.
 ├── README.md               This file.
+├── package.json            Only for the tests — the site needs nothing.
+├── test/
+│   └── run.js              The test suite. `npm test`.
 │
 ├── css/
 │   ├── theme.css           ⭐ All colors, fonts, and shapes for BOTH modes,
@@ -457,9 +460,36 @@ under-eating is a far bigger risk than over-eating:
 
 ---
 
+## Running the tests
+
+There's an automated test suite. Once, to set it up:
+
+```bash
+npm install
+```
+
+Then any time you change something:
+
+```bash
+npm test
+```
+
+It loads the real `index.html` in a fake browser and clicks around it the way
+a person would — signs in, logs a workout, switches modes, checks the streak
+maths — then prints a pass/fail count.
+
+> **npm is only for the tests.** The site itself still has no build step and
+> no dependencies. You can always just open `index.html`. Nothing in
+> `node_modules/` ever ships.
+
+Run it before and after a change. It catches the things that are easy to
+break by accident: streak logic, a form that quietly stops saving, data not
+surviving a reload. Adding your own check is two lines — see the comment at
+the top of `test/run.js`.
+
 ## Testing it yourself
 
-Things worth checking by hand after you change something:
+Some things still need a human eye. After you change something:
 
 - **Does data survive a reload?** Log a workout, press refresh. The streak,
   plan, and log should all still be there.

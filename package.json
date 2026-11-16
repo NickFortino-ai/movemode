@@ -1,0 +1,12 @@
+{
+  "name": "movemode",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A site about movement — and about movement being one of the best things you can do for your body and your mind.",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
