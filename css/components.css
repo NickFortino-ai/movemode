@@ -1147,7 +1147,11 @@
   min-width: 0;
 }
 
+/* display:block for the same reason as .option-label — .day-info is a flex
+   ITEM, not a flex container, so these two spans inside it would otherwise
+   sit inline and run together with no gap. */
 .day-title {
+  display: block;
   font-family: var(--font-head);
   font-size: 1.06rem;
   font-weight: var(--head-weight);
@@ -1157,6 +1161,8 @@
 }
 
 .day-sub {
+  display: block;
+  margin-top: 2px;
   font-size: 0.78rem;
   color: var(--text-faint);
 }
@@ -1504,7 +1510,12 @@
   min-width: 0;
 }
 
+/* Both of these must be display:block so the blurb sits on its own line
+   under the label. They're spans, and the HTML is built by joining strings
+   with no whitespace between them — left inline, "Build muscle" and "Get
+   bigger and stronger" run straight into each other with no gap at all. */
 .option-label {
+  display: block;
   font-family: var(--font-head);
   font-size: 1.02rem;
   font-weight: var(--head-weight);
@@ -1514,6 +1525,8 @@
 }
 
 .option-blurb {
+  display: block;
+  margin-top: 3px;
   font-size: 0.82rem;
   color: var(--text-dim);
   line-height: 1.4;

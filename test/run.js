@@ -542,6 +542,44 @@ function signedIn(dataJson, profile) {
   }
 
   // =========================================================================
+  group('stacked text actually stacks');
+  {
+    // These span pairs are built by joining strings with no whitespace
+    // between them, so if they are left as inline spans the two lines run
+    // straight together: "Build muscleGet bigger and stronger".
+    // jsdom has no layout engine, so the CSS rule is checked directly.
+    const d = await boot(signedIn(craft({})));
+    const doc = d.window.document;
+
+    const sheet = [...doc.styleSheets]
+      .find((s) => (s.href || '').endsWith('components.css'));
+    const displayOf = (selector) => {
+      const rule = [...sheet.cssRules].find((r) => r.selectorText === selector);
+      return rule ? rule.style.display : '(no rule)';
+    };
+
+    [
+      ['.option-label', '.option-blurb'],   // onboarding + settings cards
+      ['.hub-title', '.hub-blurb'],         // the settings profile link
+      ['.day-title', '.day-sub'],           // plan day cards
+      ['.why-fact', '.why-because'],        // the movement fact banner
+    ].forEach(function (pair) {
+      check(pair[0] + ' stacks', displayOf(pair[0]), 'block');
+      check(pair[1] + ' stacks', displayOf(pair[1]), 'block');
+    });
+
+    // And the markup really does put them back to back with no gap, which is
+    // why the display rule matters.
+    const onboardCard = doc.querySelector('#onboard-goals .option-card');
+    if (onboardCard) {
+      const label = onboardCard.querySelector('.option-label');
+      ok('nothing separates the label and blurb in the HTML',
+         label.nextSibling === onboardCard.querySelector('.option-blurb'));
+    }
+    d.window.close();
+  }
+
+  // =========================================================================
   group('structure and accessibility');
   {
     const d = await boot(signedIn(craft({})));
