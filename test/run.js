@@ -1086,7 +1086,8 @@ function signedIn(dataJson, profile) {
     const doc = d.window.document;
 
     const sheet = [...doc.styleSheets]
-      .find((s) => (s.href || '').endsWith('components.css'));
+      // The ?v= cache-buster has to be stripped before matching the name.
+      .find((s) => ((s.href || '').split('?')[0]).endsWith('components.css'));
     const declaredDisplay = (selector) => {
       const rule = [...sheet.cssRules].find((r) => r.selectorText === selector);
       return rule ? rule.style.display : '(no rule)';
@@ -1322,6 +1323,20 @@ function signedIn(dataJson, profile) {
       .filter((s) => (s.href || '').startsWith('https://movemode.local/css/'));
     check('four stylesheets parsed', sheets.length, 4);
     ok('all have rules', sheets.every((s) => s.cssRules.length > 0));
+
+    /* Every local file must carry the same ?v= cache-buster. If one is
+       missed, browsers keep serving the stale copy of it after a push and
+       the change appears not to have worked — which is exactly the problem
+       the version number exists to solve. */
+    const indexSource = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const localAssets = [...indexSource.matchAll(/(?:href|src)="((?:css|js)\/[^"]+)"/g)]
+      .map((m) => m[1]);
+
+    ok('there are local assets to check', localAssets.length > 20);
+    check('every one carries a version',
+          localAssets.filter((a) => !/\?v=\d+$/.test(a)), []);
+    check('and they all carry the SAME version',
+          [...new Set(localAssets.map((a) => a.split('?v=')[1]))].length, 1);
     d.window.close();
   }
 

@@ -506,6 +506,26 @@ under-eating is a far bigger risk than over-eating:
 
 ---
 
+## "I pushed a change but the site looks the same"
+
+Browsers hang on to CSS and JavaScript for a while, so after a push you can
+end up staring at the old version wondering why nothing happened. GitHub
+Pages tells browsers to cache for 10 minutes.
+
+**Quick check:** hard-refresh — `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R`
+(Windows). That forces one browser to re-fetch everything.
+
+**Proper fix:** every CSS and JS file in `index.html` has a `?v=` number on
+the end. Bump it and *every* browser treats the files as new:
+
+```bash
+perl -i -pe 's/\?v=\d+/?v=3/g' index.html    # then 4, 5, …
+```
+
+The number itself means nothing — it only has to differ from last time. Do
+this whenever you push something people need to see straight away. There's a
+test that every file carries the same version, so one can't get left behind.
+
 ## Running the tests
 
 There's an automated test suite. Once, to set it up:
