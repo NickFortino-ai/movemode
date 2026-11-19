@@ -1248,7 +1248,45 @@ function signedIn(dataJson, profile) {
     ok('the workout editor is NOT caught by those rules',
        !/#workout-editor[^{]*\{[^}]*align-content: center/.test(desktopSource));
 
+    // Sign-in gets its own desktop treatment: a centred row of profile
+    // tiles rather than one full-width bar.
+    ok('profiles become a centred row on desktop',
+       /#signin \.profile-list\s*\{[^}]*justify-content: center/.test(desktopSource));
+    ok('each profile becomes a tile',
+       /#signin \.profile-card\s*\{[^}]*flex-direction: column/.test(desktopSource));
+    ok('with a bigger avatar',
+       /#signin \.profile-avatar\s*\{[^}]*width: 88px/.test(desktopSource));
+    ok('and the lock sits on the tile rather than on its own line',
+       /#signin \.profile-lock\s*\{[^}]*position: absolute/.test(desktopSource));
+
+    // The sign-in screen still works with several profiles on it.
+    d.window.MM.onboarding.close();
+    d.window.MM.accounts.create('Sam', '🚴', null);
+    d.window.MM.accounts.create('Alex', '🧘', '1234');
+    d.window.MM.signinView.open();
+    await sleep(60);
+
+    const tiles = [...doc.querySelectorAll('#signin .profile-card')];
+    check('a tile per profile', tiles.length, d.window.MM.accounts.all().length);
+    ok('each tile shows an avatar and a name',
+       tiles.every((t) => t.querySelector('.profile-avatar') && t.querySelector('.profile-name')));
+    check('only the PIN-protected one shows a lock',
+          doc.querySelectorAll('#signin .profile-lock').length, 1);
+    ok('making a new profile is still offered', !!doc.querySelector('#signin-new'));
+    ok('the honest warning is still there',
+       /not real security/i.test(doc.querySelector('#signin-disclaimer').textContent));
+
+    // Tapping a tile with no PIN signs straight in.
+    const sam = d.window.MM.accounts.all().find((p) => p.name === 'Sam');
+    doc.querySelector('[data-signin="' + sam.id + '"]').click();
+    await sleep(80);
+    check('tapping a tile signs in', d.window.MM.accounts.active().name, 'Sam');
+    ok('and the sign-in screen closes',
+       !doc.querySelector('#signin').classList.contains('is-open'));
+
     // The flow still works with the new wrappers in place.
+    d.window.MM.onboarding.open();
+    await sleep(60);
     const q = (s) => doc.querySelector(s);
     q('#onboard-goals [data-value="muscle"]').click();
     await sleep(60);
