@@ -1200,6 +1200,71 @@ function signedIn(dataJson, profile) {
   }
 
   // =========================================================================
+  group('onboarding is laid out for a desktop too');
+  {
+    const d = await boot(signedIn(craft({})));
+    const doc = d.window.document;
+    d.window.MM.onboarding.open();
+    await sleep(60);
+
+    // Every step must have both halves, or the desktop split silently
+    // collapses back to a single column for that one question.
+    const steps = [...doc.querySelectorAll('#onboarding .onboard-step')];
+    check('five steps', steps.length, 5);
+    check('every step asks something',
+          steps.filter((s) => !s.querySelector('.onboard-ask')).length, 0);
+    check('every step offers an answer',
+          steps.filter((s) => !s.querySelector('.onboard-answer')).length, 0);
+    check('the question comes before the answer in the markup',
+          steps.filter((s) => {
+            const ask = s.querySelector('.onboard-ask');
+            const answer = s.querySelector('.onboard-answer');
+            return !(ask.compareDocumentPosition(answer) & 4);   // 4 = FOLLOWING
+          }).length, 0);
+
+    // Nothing may be left outside the two halves, or it would land in the
+    // wrong grid column.
+    const strays = steps.flatMap((s) => [...s.children])
+      .filter((el) => !el.classList.contains('onboard-ask') &&
+                      !el.classList.contains('onboard-answer'))
+      .map((el) => el.className || el.tagName);
+    check('nothing sits outside the two halves', strays, []);
+
+    // The controls each step needs are inside the answer half.
+    ok('the goal choices are an answer',
+       !!doc.querySelector('.onboard-answer #onboard-goals'));
+    ok('the day picker is an answer',
+       !!doc.querySelector('.onboard-answer #onboard-days'));
+    ok('the sport box is an answer',
+       !!doc.querySelector('.onboard-answer #onboard-sport'));
+
+    // The desktop rules have to exist and be scoped away from the editor,
+    // whose content is long and must keep scrolling from the top.
+    const desktopSource = fs.readFileSync(path.join(ROOT, 'css/desktop.css'), 'utf8');
+    ok('the step becomes two columns on desktop',
+       /#onboarding \.onboard-step\.is-active\s*\{[^}]*grid-template-columns/.test(desktopSource));
+    ok('onboarding is centred in the window',
+       /#onboarding \.onboarding-inner[^{]*\{[^}]*align-content: center/.test(desktopSource));
+    ok('the workout editor is NOT caught by those rules',
+       !/#workout-editor[^{]*\{[^}]*align-content: center/.test(desktopSource));
+
+    // The flow still works with the new wrappers in place.
+    const q = (s) => doc.querySelector(s);
+    q('#onboard-goals [data-value="muscle"]').click();
+    await sleep(60);
+    q('#onboard-next').click();
+    check('next still advances', q('.onboard-step.is-active').dataset.step, '1');
+    q('#onboard-back').click();
+    check('back still works', q('.onboard-step.is-active').dataset.step, '0');
+    // This profile had already onboarded, so its saved goal is prefilled and
+    // the new pick is added to it rather than replacing it.
+    ok('and the pick was remembered going back',
+       [...doc.querySelectorAll('#onboard-goals .option-card[aria-pressed="true"]')]
+         .map((c) => c.dataset.value).includes('muscle'));
+    d.window.close();
+  }
+
+  // =========================================================================
   group('structure and accessibility');
   {
     const d = await boot(signedIn(craft({})));

@@ -345,55 +345,80 @@
 
     <h1 id="onboard-title" class="sr-only">Set up your plan</h1>
 
+    <!-- Every step is split into the QUESTION and the ANSWER. On a phone
+         they simply stack; on a desktop css/desktop.css puts them side by
+         side, so the question sits on the left and the choices on the
+         right instead of everything hugging a narrow column. -->
+
     <!-- Step 1: goal -->
     <div class="onboard-step is-active" data-step="0">
-      <h2 class="onboard-question" id="onboard-welcome">Welcome</h2>
-      <p class="onboard-help" id="onboard-intro"></p>
-      <h3>What are you going for?</h3>
-      <p class="onboard-help">Pick as many as you want — your first pick is
-        your main goal, and each one gets a progress bar on your home screen.</p>
-      <div class="option-grid" id="onboard-goals"></div>
+      <div class="onboard-ask">
+        <h2 class="onboard-question" id="onboard-welcome">Welcome</h2>
+        <p class="onboard-help" id="onboard-intro"></p>
+        <h3>What are you going for?</h3>
+        <p class="onboard-help">Pick as many as you want — your first pick is
+          your main goal, and each one gets a progress bar on your home screen.</p>
+      </div>
+      <div class="onboard-answer">
+        <div class="option-grid" id="onboard-goals"></div>
+      </div>
     </div>
 
     <!-- Step 2: experience -->
     <div class="onboard-step" data-step="1">
-      <h2 class="onboard-question">How much have you worked out before?</h2>
-      <p class="onboard-help">Be honest — this just sets the starting point. Everyone starts somewhere.</p>
-      <div class="option-grid" id="onboard-experience"></div>
+      <div class="onboard-ask">
+        <h2 class="onboard-question">How much have you worked out before?</h2>
+        <p class="onboard-help">Be honest — this just sets the starting point. Everyone starts somewhere.</p>
+      </div>
+      <div class="onboard-answer">
+        <div class="option-grid" id="onboard-experience"></div>
+      </div>
     </div>
 
     <!-- Step 3: days per week -->
     <div class="onboard-step" data-step="2">
-      <h2 class="onboard-question">How many days a week can you train?</h2>
-      <p class="onboard-help">Pick what you can actually keep up with, not what sounds impressive.</p>
-      <div class="segmented" id="onboard-days" role="group" aria-label="Days per week">
-        <button type="button" class="seg-btn" data-value="2">2</button>
-        <button type="button" class="seg-btn" data-value="3" aria-pressed="true">3</button>
-        <button type="button" class="seg-btn" data-value="4">4</button>
-        <button type="button" class="seg-btn" data-value="5">5</button>
-        <button type="button" class="seg-btn" data-value="6">6</button>
+      <div class="onboard-ask">
+        <h2 class="onboard-question">How many days a week can you train?</h2>
+        <p class="onboard-help">Pick what you can actually keep up with, not what sounds impressive.</p>
       </div>
-      <p class="field-hint mt-1">Rest days get built in automatically.</p>
+      <div class="onboard-answer">
+        <div class="segmented" id="onboard-days" role="group" aria-label="Days per week">
+          <button type="button" class="seg-btn" data-value="2">2</button>
+          <button type="button" class="seg-btn" data-value="3" aria-pressed="true">3</button>
+          <button type="button" class="seg-btn" data-value="4">4</button>
+          <button type="button" class="seg-btn" data-value="5">5</button>
+          <button type="button" class="seg-btn" data-value="6">6</button>
+        </div>
+        <p class="field-hint mt-1">Rest days get built in automatically.</p>
+      </div>
     </div>
 
     <!-- Step 4: equipment -->
     <div class="onboard-step" data-step="3">
-      <h2 class="onboard-question">What equipment can you get to?</h2>
-      <p class="onboard-help">No equipment is completely fine — plenty of the library needs nothing at all.</p>
-      <div class="option-grid" id="onboard-equipment"></div>
+      <div class="onboard-ask">
+        <h2 class="onboard-question">What equipment can you get to?</h2>
+        <p class="onboard-help">No equipment is completely fine — plenty of the library needs nothing at all.</p>
+      </div>
+      <div class="onboard-answer">
+        <div class="option-grid" id="onboard-equipment"></div>
+      </div>
     </div>
 
     <!-- Step 5: sport (optional) -->
     <div class="onboard-step" data-step="4">
-      <h2 class="onboard-question">Do you play a sport?</h2>
-      <p class="onboard-help">Optional. It just helps us word things for you.</p>
-      <div class="field">
-        <label for="onboard-sport">Sport (optional)</label>
-        <input type="text" id="onboard-sport" placeholder="Football, track, swimming, none…" autocomplete="off">
+      <div class="onboard-ask">
+        <h2 class="onboard-question">Do you play a sport?</h2>
+        <p class="onboard-help">Optional. It just helps us word things for you.</p>
       </div>
-      <div class="note">
-        <span class="note-icon" aria-hidden="true">💬</span>
-        <span id="onboard-disclaimer"></span>
+      <div class="onboard-answer">
+        <div class="field">
+          <label for="onboard-sport">Sport (optional)</label>
+          <input type="text" id="onboard-sport" placeholder="Football, track, swimming, none…" autocomplete="off">
+        </div>
+        <div class="note">
+          <span class="note-icon" aria-hidden="true">💬</span>
+          <span id="onboard-disclaimer"></span>
+        </div>
       </div>
     </div>
 

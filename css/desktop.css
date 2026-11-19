@@ -389,6 +389,92 @@
   #settings-content {
     max-width: 840px;
   }
+
+  /* =========================================================================
+     ONBOARDING — a proper desktop layout, not the phone one stretched
+
+     On a phone the questions are a single scrolling column. On a desktop
+     that leaves a narrow strip of content stranded in a lot of empty space,
+     so the step splits in two: the question on the left, the choices on the
+     right. The whole thing is centred in the window rather than starting at
+     the top.
+
+     These rules are scoped to #onboarding and #signin on purpose — the
+     workout editor shares the .onboarding class for its overlay, and its
+     content is long, so it must keep scrolling from the top.
+     ======================================================================= */
+  #onboarding .onboarding-inner,
+  #signin .onboarding-inner {
+    display: grid;
+    align-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 48px var(--page-pad);
+  }
+
+  #onboarding .onboarding-inner {
+    max-width: 1040px;
+  }
+
+  /* The sign-in screen has much less to say, so it stays narrow. */
+  #signin .onboarding-inner {
+    max-width: 560px;
+  }
+
+  /* ---- The two-column question ---- */
+  #onboarding .onboard-step.is-active {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+    column-gap: 56px;
+    align-items: start;
+  }
+
+  #onboarding .onboard-ask {
+    /* Stays put while a long list of choices scrolls beside it. */
+    position: sticky;
+    top: 48px;
+  }
+
+  #onboarding .onboard-question {
+    font-size: 2.1rem;
+    margin-bottom: 10px;
+  }
+
+  #onboarding .onboard-ask h3 {
+    margin-top: 22px;
+    font-size: 1.25rem;
+  }
+
+  #onboarding .onboard-help {
+    font-size: 1.02rem;
+    max-width: 42ch;
+  }
+
+  /* One choice per row reads better beside a question than a cramped 2x3. */
+  #onboarding .option-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #onboarding .option-card {
+    padding: 18px;
+  }
+
+  /* ---- Progress dots and the nav bar line up with the content ---- */
+  #onboarding .steps {
+    max-width: 420px;
+    margin-bottom: 34px;
+  }
+
+  /* The buttons belong under the choices, not stretched across the page. */
+  #onboarding .onboard-nav {
+    justify-content: flex-end;
+    margin-top: 28px;
+  }
+
+  #onboarding .onboard-nav .btn {
+    flex: 0 0 auto;
+    min-width: 150px;
+  }
 }
 
 
