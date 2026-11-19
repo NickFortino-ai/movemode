@@ -1260,6 +1260,33 @@ function signedIn(dataJson, profile) {
     ok('and the lock sits on the tile rather than on its own line',
        /#signin \.profile-lock\s*\{[^}]*position: absolute/.test(desktopSource));
 
+    // The brand on the sign-in screen is the site introducing itself, so it
+    // must be bigger than the small one in the app header.
+    const componentsSource = fs.readFileSync(path.join(ROOT, 'css/components.css'), 'utf8');
+    const layoutSource = fs.readFileSync(path.join(ROOT, 'css/layout.css'), 'utf8');
+
+    // Anchored to the start of a line, so looking up ".logo-text" doesn't
+    // accidentally match ".signin-brand .logo-text" — which is the very
+    // thing being compared against.
+    const sizeOf = (source, selector) => {
+      const rule = source.match(new RegExp(
+        '(?:^|\\n)\\s*' + selector.replace(/[.#]/g, '\\$&') +
+        '\\s*\\{[^}]*font-size:\\s*([\\d.]+)rem'));
+      return rule ? Number(rule[1]) : null;
+    };
+
+    const headerBrand = sizeOf(layoutSource, '.logo-text');
+    const signinBrand = sizeOf(componentsSource, '.signin-brand .logo-text');
+    const signinBrandDesktop = sizeOf(desktopSource, '#signin .signin-brand .logo-text');
+
+    ok('the sign-in brand has its own size', signinBrand !== null);
+    ok(`bigger than the header brand (${signinBrand} vs ${headerBrand})`,
+       signinBrand > headerBrand);
+    ok(`and bigger again on desktop (${signinBrandDesktop})`,
+       signinBrandDesktop > signinBrand);
+    ok('the logo mark grows with it',
+       /#signin \.signin-brand \.logo-mark\s*\{[^}]*width: 64px/.test(desktopSource));
+
     // The sign-in screen still works with several profiles on it.
     d.window.MM.onboarding.close();
     d.window.MM.accounts.create('Sam', '🚴', null);

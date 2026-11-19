@@ -471,12 +471,30 @@
   transform: scale(0.94);
 }
 
-/* ---- The sign-in screen ---- */
+/* ---- The sign-in screen ----
+   The brand is bigger here than in the header. This is the one moment the
+   site introduces itself, so it gets to be the size of a title rather than
+   a label tucked in a corner. */
 .signin-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 13px;
   margin-bottom: 26px;
+}
+
+.signin-brand .logo-mark {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius);
+}
+
+.signin-brand .logo-mark svg {
+  width: 27px;
+  height: 27px;
+}
+
+.signin-brand .logo-text {
+  font-size: 1.9rem;
 }
 
 .profile-list {

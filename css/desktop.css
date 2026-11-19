@@ -431,7 +431,24 @@
 
   #signin .signin-brand {
     justify-content: center;
-    margin-bottom: 30px;
+    gap: 16px;
+    margin-bottom: 34px;
+  }
+
+  /* Big enough to read as the site introducing itself, while the question
+     below it still leads. */
+  #signin .signin-brand .logo-mark {
+    width: 64px;
+    height: 64px;
+  }
+
+  #signin .signin-brand .logo-mark svg {
+    width: 35px;
+    height: 35px;
+  }
+
+  #signin .signin-brand .logo-text {
+    font-size: 2.4rem;
   }
 
   #signin h1 {
